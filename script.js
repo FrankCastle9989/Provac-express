@@ -155,6 +155,15 @@ document.addEventListener("DOMContentLoaded", () => {
     tipoProductoSelect.addEventListener('change', actualizarSugerenciaEmpaque);
   }
 
+  // Escuchador para el botón GPS
+  const btnGps = document.getElementById('btnGps') || document.querySelector('[data-action="gps"]');
+  if (btnGps) {
+    btnGps.addEventListener('click', (e) => {
+      e.preventDefault();
+      obtenerUbicacionGPS();
+    });
+  }
+
   // Escuchadores dinámicos del formulario
   document.querySelectorAll('#calcForm input, #calcForm select').forEach(element => {
     element.addEventListener('input', ejecutarCalculo);
@@ -286,26 +295,54 @@ function obtenerUbicacionGPS() {
   const statusTxt = document.getElementById('gpsStatusText');
 
   if (!navigator.geolocation) {
-    statusTxt.innerText = "Navegador no soporta geolocalización GPS.";
+    if (statusTxt) statusTxt.innerText = "Navegador no soporta geolocalización GPS.";
     return;
   }
 
-  statusTxt.innerText = "Obteniendo coordenadas GPS...";
+  if (statusTxt) statusTxt.innerText = "Obteniendo coordenadas GPS y dirección...";
 
   navigator.geolocation.getCurrentPosition(
-    (pos) => {
+    async (pos) => {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+
+      // 1. Cálculo de distancia a la bodega
       const distDirecta = haversineDistance(
-        pos.coords.latitude, pos.coords.longitude,
+        lat, lon,
         CONFIG.BODEGA_COORDS.lat, CONFIG.BODEGA_COORDS.lon
       );
       // Ajuste de red vial (+30%)
       const distVial = Math.round((distDirecta * 1.3) * 10) / 10;
 
-      document.getElementById('distanciaKm').value = distVial;
-      statusTxt.innerText = `Distancia estimada: ~${distVial} km desde bodega`;
+      const distInput = document.getElementById('distanciaKm');
+      if (distInput) distInput.value = distVial;
+
+      // 2. Geocodificación inversa para autocompletar calle y colonia
+      try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+        const data = await response.json();
+
+        if (data && data.address) {
+          const calleInput = document.getElementById('calle');
+          const coloniaInput = document.getElementById('colonia');
+
+          const nombreCalle = data.address.road || data.address.pedestrian || data.address.suburb || "Ubicación GPS";
+          const nombreColonia = data.address.neighbourhood || data.address.suburb || data.address.city_district || data.address.city || "Monterrey";
+
+          if (calleInput) calleInput.value = nombreCalle;
+          if (coloniaInput) coloniaInput.value = nombreColonia;
+        }
+      } catch (err) {
+        console.error("No se pudo autocompletar la dirección exacta por red:", err);
+      }
+
+      if (statusTxt) statusTxt.innerText = `Distancia estimada: ~${distVial} km desde bodega`;
       ejecutarCalculo();
     },
-    () => { statusTxt.innerText = "Permiso denegado o GPS no disponible."; },
+    (error) => {
+      if (statusTxt) statusTxt.innerText = "Permiso denegado o GPS no disponible.";
+      console.warn("Error GPS:", error.message);
+    },
     { enableHighAccuracy: true, timeout: 8000 }
   );
 }
@@ -320,22 +357,22 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
 
 // ALGORITMO DE CÁLCULO DE COTIZACIÓN
 function ejecutarCalculo() {
-  const pesoUnitario = parseFloat(document.getElementById('peso').value) || 0;
-  const cantidad = parseInt(document.getElementById('cantidad').value) || 0;
-  const distanciaKm = parseFloat(document.getElementById('distanciaKm').value) || 0;
-  const requiereManiobra = document.getElementById('maniobra').value === 'con';
+  const pesoUnitario = parseFloat(document.getElementById('peso')?.value) || 0;
+  const cantidad = parseInt(document.getElementById('cantidad')?.value) || 0;
+  const distanciaKm = parseFloat(document.getElementById('distanciaKm')?.value) || 0;
+  const requiereManiobra = document.getElementById('maniobra')?.value === 'con';
 
   const alertNotice = document.getElementById('alertNotice');
   const precioTotalEl = document.getElementById('precioTotal');
   const desgloseText = document.getElementById('desgloseText');
   const btnWhatsapp = document.getElementById('btnWhatsapp');
 
-  alertNotice.style.display = 'none';
-  btnWhatsapp.disabled = true;
+  if (alertNotice) alertNotice.style.display = 'none';
+  if (btnWhatsapp) btnWhatsapp.disabled = true;
 
   if (cantidad === 0 || pesoUnitario === 0) {
     actualizarGauge(0);
-    precioTotalEl.innerHTML = "$0 <small>MXN</small>";
+    if (precioTotalEl) precioTotalEl.innerHTML = "$0 <small>MXN</small>";
     return;
   }
 
@@ -343,16 +380,18 @@ function ejecutarCalculo() {
   actualizarGauge(pesoTotal);
 
   if (pesoTotal > CONFIG.SAVEIRO_MAX_KG) {
-    alertNotice.innerText = `El peso total (${pesoTotal.toFixed(1)} kg) supera el límite de 1 Saveiro (650 kg).`;
-    alertNotice.style.display = 'block';
-    precioTotalEl.innerText = "Exceso de Carga";
-    desgloseText.innerText = "Ajusta la cantidad o solicita unidad de mayor tonelaje";
+    if (alertNotice) {
+      alertNotice.innerText = `El peso total (${pesoTotal.toFixed(1)} kg) supera el límite de 1 Saveiro (650 kg).`;
+      alertNotice.style.display = 'block';
+    }
+    if (precioTotalEl) precioTotalEl.innerText = "Exceso de Carga";
+    if (desgloseText) desgloseText.innerText = "Ajusta la cantidad o solicita unidad de mayor tonelaje";
     return;
   }
 
   if (distanciaKm <= 0) {
-    precioTotalEl.innerHTML = "$0 <small>MXN</small>";
-    desgloseText.innerText = "Ingresa la distancia en km o activa GPS";
+    if (precioTotalEl) precioTotalEl.innerHTML = "$0 <small>MXN</small>";
+    if (desgloseText) desgloseText.innerText = "Ingresa la distancia en km o activa GPS";
     return;
   }
 
@@ -362,20 +401,22 @@ function ejecutarCalculo() {
 
   let tarifaTotal = Math.round(((CONFIG.TARIFA_BASE + costoDistancia) * factorSobrecarga) + costoManiobra);
 
-  precioTotalEl.innerHTML = `$${tarifaTotal.toLocaleString()} <small>MXN</small>`;
-  desgloseText.innerText = `${distanciaKm} km | ${cantidad} cajas (${pesoTotal} kg) ${requiereManiobra ? '| C/ Maniobra' : ''}`;
-  btnWhatsapp.disabled = false;
+  if (precioTotalEl) precioTotalEl.innerHTML = `$${tarifaTotal.toLocaleString()} <small>MXN</small>`;
+  if (desgloseText) desgloseText.innerText = `${distanciaKm} km | ${cantidad} cajas (${pesoTotal} kg) ${requiereManiobra ? '| C/ Maniobra' : ''}`;
+  if (btnWhatsapp) btnWhatsapp.disabled = false;
 
-  btnWhatsapp.onclick = () => {
-    const calle = document.getElementById('calle').value || 'No especificada';
-    const colonia = document.getElementById('colonia').value || 'Monterrey';
-    const fecha = document.getElementById('fechaEnvio').value;
-    const selectProducto = document.getElementById('tipoProducto');
-    const productoNombre = selectProducto ? selectProducto.options[selectProducto.selectedIndex]?.text : 'General';
+  if (btnWhatsapp) {
+    btnWhatsapp.onclick = () => {
+      const calle = document.getElementById('calle')?.value || 'No especificada';
+      const colonia = document.getElementById('colonia')?.value || 'Monterrey';
+      const fecha = document.getElementById('fechaEnvio')?.value;
+      const selectProducto = document.getElementById('tipoProducto');
+      const productoNombre = selectProducto ? selectProducto.options[selectProducto.selectedIndex]?.text : 'General';
 
-    const mensaje = `Hola Provac Express, solicito flete:%0A- *Producto:* ${productoNombre}%0A- *Carga:* ${cantidad} cajas (${pesoTotal} kg)%0A- *Fecha:* ${fecha}%0A- *Destino:* ${calle}, ${colonia}%0A- *Distancia:* ${distanciaKm} km%0A- *Cotización:* $${tarifaTotal} MXN`;
-    window.open(`https://wa.me/${CONFIG.WHATSAPP_PHONE}?text=${mensaje}`, '_blank');
-  };
+      const mensaje = `Hola Provac Express, solicito flete:%0A- *Producto:* ${productoNombre}%0A- *Carga:* ${cantidad} cajas (${pesoTotal} kg)%0A- *Fecha:* ${fecha}%0A- *Destino:* ${calle}, ${colonia}%0A- *Distancia:* ${distanciaKm} km%0A- *Cotización:* $${tarifaTotal} MXN`;
+      window.open(`https://wa.me/${CONFIG.WHATSAPP_PHONE}?text=${mensaje}`, '_blank');
+    };
+  }
 }
 
 function actualizarGauge(pesoTotal) {

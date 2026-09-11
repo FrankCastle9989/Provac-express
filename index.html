@@ -2,350 +2,504 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Provac Express | Logística, Distribución y Fletes Mayoristas</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PROVAC Express - Cotizador y Catálogo de Fletes</title>
+  <style>
+    :root {
+      --primary: #0052cc;
+      --primary-hover: #003d99;
+      --secondary: #25d366;
+      --secondary-hover: #1ebd56;
+      --bg-color: #f4f6f9;
+      --card-bg: #ffffff;
+      --text: #172b4d;
+      --text-muted: #5e6c84;
+      --border: #dfe1e6;
+      --success: #36b37e;
+      --danger: #ff5630;
+      --warning-bg: #fffae6;
+      --warning-border: #ffe380;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text);
+      line-height: 1.5;
+      padding-bottom: 40px;
+    }
+
+    header {
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
+
+    /* BUSCADOR Y FILTROS */
+    .catalog-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .search-bar {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 1rem;
+      outline: none;
+    }
+
+    .search-bar:focus {
+      border-color: var(--primary);
+    }
+
+    .filters-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .filter-btn {
+      background: #f0f2f5;
+      border: 1px solid var(--border);
+      padding: 8px 14px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+    }
+
+    .filter-btn.active, .filter-btn:hover {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    /* GRID DE CATÁLOGO */
+    .catalog-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .catalog-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .catalog-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+    }
+
+    .catalog-card-icon {
+      font-size: 2.2rem;
+      margin-bottom: 10px;
+    }
+
+    .catalog-card-tag {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--primary);
+      background: #deebff;
+      padding: 4px 8px;
+      border-radius: 4px;
+      align-self: flex-start;
+      margin-bottom: 8px;
+    }
+
+    .catalog-card h3 {
+      font-size: 1.1rem;
+      margin-bottom: 6px;
+    }
+
+    .catalog-card p {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin-bottom: 15px;
+    }
+
+    .catalog-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: auto;
+      padding-top: 10px;
+      border-top: 1px dashed var(--border);
+    }
+
+    .spec-chip {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      background: #f4f5f7;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    .btn-card-quote {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .btn-card-quote:hover {
+      background: var(--primary-hover);
+    }
+
+    /* MODAL */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(9, 30, 66, 0.54);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 15px;
+    }
+
+    .modal-backdrop.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--card-bg);
+      width: 100%;
+      max-width: 580px;
+      max-height: 90vh;
+      overflow-y: auto;
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      position: relative;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--text-muted);
+    }
+
+    /* FORMULARIO Y WIDGETS */
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.88rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.95rem;
+    }
+
+    .input-with-button {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-gps {
+      background: #eaecef;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn-gps:hover {
+      background: #dfe1e6;
+    }
+
+    .status-text {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .empaque-box {
+      background: #f0f7ff;
+      border: 1px solid #b3d4ff;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 0.85rem;
+      margin-bottom: 15px;
+      display: none;
+    }
+
+    /* MEDIDOR / GAUGE */
+    .gauge-container {
+      margin: 15px 0;
+    }
+
+    .gauge-bar {
+      width: 100%;
+      height: 12px;
+      background: #dfe1e6;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .gauge-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--success);
+      transition: width 0.3s ease, background-color 0.3s ease;
+    }
+
+    .gauge-text {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+      text-align: right;
+    }
+
+    .alert-notice {
+      background: var(--warning-bg);
+      border: 1px solid var(--warning-border);
+      color: #826100;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      margin-bottom: 15px;
+      display: none;
+    }
+
+    .result-box {
+      background: #f4f5f7;
+      border-radius: 8px;
+      padding: 15px;
+      text-align: center;
+      margin-top: 15px;
+    }
+
+    .precio-total {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .btn-whatsapp {
+      width: 100%;
+      background: var(--secondary);
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 15px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-whatsapp:disabled {
+      background: #a5d6a7;
+      cursor: not-allowed;
+    }
+
+    .btn-whatsapp:not(:disabled):hover {
+      background: var(--secondary-hover);
+    }
+
+    .no-results {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 40px;
+      color: var(--text-muted);
+    }
+  </style>
 </head>
 <body>
 
-  <!-- BARRA DE NAVEGACIÓN -->
-  <nav class="navbar" id="navbar">
-    <div class="nav-container">
-      <a href="#" class="brand-logo">
-        <div class="logo-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path d="M1 3h15v13H1z"/>
-            <path d="M16 8h4l3 3v5h-7V8z"/>
-            <circle cx="5.5" cy="18.5" r="2.5"/>
-            <circle cx="18.5" cy="18.5" r="2.5"/>
-          </svg>
-        </div>
-        <span>PROVAC <strong>EXPRESS</strong></span>
-      </a>
-      
-      <div class="nav-links">
-        <a href="#servicios">Servicios</a>
-        <a href="#catalogo">Catálogo</a>
-        <a href="#contacto">Contacto</a>
-      </div>
-
-      <div class="nav-actions">
-        <button class="btn-glow" onclick="toggleModal(true)">
-          <span>⚡ Cotizar Flete</span>
-        </button>
-      </div>
-    </div>
-  </nav>
-
-  <!-- HERO SECTION -->
-  <header class="hero-section">
-    <div class="hero-bg-glow"></div>
-    <div class="hero-container">
-      <div class="hero-badge">
-        <span class="pulse-dot"></span> Cadena Fría y Logística 2026
-      </div>
-      <h1>Distribución Mayorista <br><span class="gradient-text">Especializada en Monterrey</span></h1>
-      <p>Infraestructura logística de alto rendimiento. Soluciones integrales de almacenaje, logística de frío y entrega de última milla para el canal de detalle.</p>
-      
-      <div class="hero-cta-group">
-        <button class="btn-primary" onclick="toggleModal(true)">
-          <span>📍 Cotizar Envío por GPS</span>
-        </button>
-        <a href="#catalogo" class="btn-outline">Ver Catálogo</a>
-      </div>
-
-      <!-- Métricas / Dashboard Preview -->
-      <div class="metrics-grid">
-        <div class="metric-card">
-          <span class="metric-val">+99.2%</span>
-          <span class="metric-lbl">Entregas a Tiempo</span>
-        </div>
-        <div class="metric-card">
-          <span class="metric-val">650 kg</span>
-          <span class="metric-lbl">Capacidad por Unidad Saveiro</span>
-        </div>
-        <div class="metric-card">
-          <span class="metric-val">&lt; 15 min</span>
-          <span class="metric-lbl">Tiempo de Respuesta</span>
-        </div>
-      </div>
-    </div>
+  <header>
+    <div class="logo">PROVAC Express</div>
+    <button class="btn-card-quote" onclick="toggleModal(true)">🚚 Cotizar Flete</button>
   </header>
 
-  <!-- SERVICIOS -->
-  <section class="services-section" id="servicios">
-    <div class="section-header">
-      <h2>Soluciones Logísticas Integrales</h2>
-      <p>Diseñadas para optimizar tus tiempos de entrega y garantizar la frescura del producto.</p>
-    </div>
-
-    <div class="services-grid">
-      <div class="service-card">
-        <div class="service-icon">🚚</div>
-        <h3>Fletes y Distribución Local</h3>
-        <p>Rutas optimizadas en la Zona Metropolitana de Monterrey para entrega en tiendas y centros de abasto.</p>
-        <ul class="service-list">
-          <li>✔ Unidades Volkswagen Saveiro</li>
-          <li>✔ Seguimiento satelital en tiempo real</li>
-        </ul>
-      </div>
-
-      <div class="service-card featured">
-        <div class="service-tag">Más Solicitado</div>
-        <div class="service-icon">❄️</div>
-        <h3>Cadena Fría y Almacenaje</h3>
-        <p>Control riguroso de temperatura para conservación de carnes frías, lácteos y perecederos.</p>
-        <ul class="service-list">
-          <li>✔ Monitoreo térmico continuo</li>
-          <li>✔ Descarga y maniobra profesional</li>
-        </ul>
-      </div>
-
-      <div class="service-card">
-        <div class="service-icon">📊</div>
-        <h3>Gestión de Ruta y Canal Detalle</h3>
-        <p>Estrategias avanzadas de cobro, entrega y administración de inventario en punto de venta.</p>
-        <ul class="service-list">
-          <li>✔ Cobertura multirruta</li>
-          <li>✔ Indicadores de efectividad</li>
-        </ul>
-      </div>
-    </div>
-  </section>
-
-  <!-- CATÁLOGO INTERACTIVO -->
-  <section class="catalog-section" id="catalogo">
-    <div class="section-header">
-      <span class="badge-mini">Portafolio de Distribución</span>
-      <h2>Catálogo de Categorías y Productos</h2>
-      <p>Logística y entrega especializada para sectores comerciales e industriales.</p>
-    </div>
-
-    <!-- Filtros de Categorías -->
-    <div class="catalog-filters" id="catalogFilters">
-      <button class="filter-btn active" data-category="todos">Todos</button>
-      <button class="filter-btn" data-category="seco">Alimentos Secos</button>
-      <button class="filter-btn" data-category="vacio">Sellados al Vacío</button>
-      <button class="filter-btn" data-category="latas">Bebidas en Lata</button>
-      <button class="filter-btn" data-category="botellas">Bebidas PET</button>
-      <button class="filter-btn" data-category="polvo">Productos en Polvo</button>
-      <button class="filter-btn" data-category="costales">Costales y Granel</button>
-      <button class="filter-btn" data-category="cosmeticos">Cosméticos</button>
-      <button class="filter-btn" data-category="medicamentos">Medicamentos</button>
-    </div>
-
-    <!-- Buscador Integrado -->
-    <div class="catalog-search-bar">
-      <div class="search-input-wrapper">
-        <span class="search-icon">🔍</span>
-        <input type="text" id="catalogSearch" placeholder="Buscar categoría o producto comercial...">
-      </div>
-    </div>
-
-    <!-- Nota Informativa Medicamentos -->
-    <div class="notice-banner info">
-      <span class="notice-icon">ℹ️</span>
-      <p><strong>Aviso Operativo:</strong> La distribución y flete de <strong>Medicamentos y Muestras Médicas</strong> en esta línea de servicio aplica exclusivamente para productos que <u>NO requieran cadena de frío o temperatura controlada</u> (almacenamiento y transporte a temperatura ambiente).</p>
-    </div>
-
-    <!-- Grid Dinámico de Tarjetas de Productos -->
-    <div class="catalog-grid" id="catalogGrid">
-      <!-- Se genera automáticamente con script.js -->
-    </div>
-  </section>
-
-  <!-- MODAL / CALCULADORA RESPONSIVA -->
-  <div class="modal-backdrop" id="modalBackdrop">
-    <div class="modal-window">
-      <button class="modal-close-btn" onclick="toggleModal(false)">&times;</button>
+  <main class="container">
+    <div class="catalog-controls">
+      <input type="text" id="catalogSearch" class="search-bar" placeholder="Buscar productos, empaques o categorías...">
       
-      <div class="modal-title-group">
-        <span class="badge-mini">Cotizador Inteligente</span>
-        <h2>Calculadora de Fletes Express</h2>
-        <p>Estima el costo exacto según volumen, peso y distancia real.</p>
+      <div id="catalogFilters" class="filters-grid">
+        <button class="filter-btn active" data-category="todos">Todos</button>
+        <button class="filter-btn" data-category="seco">Alimentos Secos</button>
+        <button class="filter-btn" data-category="vacio">Sellados al Vacío</button>
+        <button class="filter-btn" data-category="latas">Bebidas en Lata</button>
+        <button class="filter-btn" data-category="botellas">Bebidas PET</button>
+        <button class="filter-btn" data-category="polvo">En Polvo</button>
+        <button class="filter-btn" data-category="costales">Costales</button>
+        <button class="filter-btn" data-category="cosmeticos">Cosméticos</button>
+        <button class="filter-btn" data-category="medicamentos">Medicamentos</button>
+      </div>
+    </div>
+
+    <div id="catalogGrid" class="catalog-grid"></div>
+  </main>
+
+  <!-- MODAL DE COTIZACIÓN -->
+  <div id="modalBackdrop" class="modal-backdrop">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Cotizador de Flete</h2>
+        <button class="close-btn" onclick="toggleModal(false)">&times;</button>
       </div>
 
-      <form id="calcForm" onsubmit="return false;">
-        <div class="form-step">
-          <span class="step-num">01</span>
-          <h4>Especificaciones del Empaque</h4>
+      <form id="calcForm" onsubmit="event.preventDefault();">
+        
+        <div class="form-group">
+          <label for="tipoProducto">Tipo de Producto:</label>
+          <select id="tipoProducto" class="form-control">
+            <option value="">-- Selecciona un tipo --</option>
+            <option value="seco">Alimentos Secos</option>
+            <option value="vacio">Sellados al Vacío / Refrigerados</option>
+            <option value="latas">Bebidas en Lata</option>
+            <option value="botellas">Bebidas PET</option>
+            <option value="polvo">Productos en Polvo / Harinas</option>
+            <option value="costales">Costalería e Industrial</option>
+            <option value="cosmeticos">Cosméticos y Cuidado Personal</option>
+            <option value="medicamentos">Medicamentos (Sin Frío)</option>
+          </select>
         </div>
 
-        <div class="input-row cols-3">
-          <div class="input-field">
-            <label for="largo">Largo (cm)</label>
-            <input type="number" id="largo" placeholder="Ej: 40" min="1">
+        <div id="empaqueBox" class="empaque-box">
+          <p id="empaqueText">Selecciona un tipo de producto para ver la recomendación de empaque.</p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="form-group">
+            <label for="peso">Peso por unidad (kg):</label>
+            <input type="number" id="peso" class="form-control" placeholder="Ej. 10" min="0" step="0.1">
           </div>
-          <div class="input-field">
-            <label for="ancho">Ancho (cm)</label>
-            <input type="number" id="ancho" placeholder="Ej: 30" min="1">
-          </div>
-          <div class="input-field">
-            <label for="alto">Alto (cm)</label>
-            <input type="number" id="alto" placeholder="Ej: 25" min="1">
+          <div class="form-group">
+            <label for="cantidad">Cantidad de unidades:</label>
+            <input type="number" id="cantidad" class="form-control" placeholder="Ej. 25" min="0">
           </div>
         </div>
 
-        <div class="input-row cols-2">
-          <div class="input-field">
-            <label for="peso">Peso C/U (kg)</label>
-            <input type="number" id="peso" step="0.1" placeholder="Ej: 12" min="0.1">
-          </div>
-          <div class="input-field">
-            <label for="cantidad">Cajas Totales</label>
-            <input type="number" id="cantidad" placeholder="Ej: 25" min="1">
-          </div>
-        </div>
-
-        <!-- Indicador de Ocupación -->
-        <div class="load-gauge">
-          <div class="gauge-labels">
-            <span>Ocupación de la Unidad (Saveiro)</span>
-            <strong id="gaugeText">0 kg / 650 kg</strong>
-          </div>
+        <!-- MEDIDOR DE CAPACIDAD -->
+        <div class="gauge-container">
           <div class="gauge-bar">
             <div id="gaugeFill" class="gauge-fill"></div>
           </div>
+          <div id="gaugeText" class="gauge-text">0.0 kg / 650 kg</div>
         </div>
 
-        <div id="alertNotice" class="alert-banner"></div>
+        <div id="alertNotice" class="alert-notice"></div>
 
-        <div class="form-step">
-          <span class="step-num">02</span>
-          <h4>Programación y Ubicación</h4>
+        <div class="form-group">
+          <label for="calle">Calle y Número de Destino:</label>
+          <input type="text" id="calle" class="form-control" placeholder="Ej. Av. Constitución 123">
         </div>
 
-        <div class="input-row cols-2">
-          <div class="input-field">
-            <label for="fechaEnvio">Fecha requerida</label>
-            <input type="date" id="fechaEnvio">
+        <div class="form-group">
+          <label for="colonia">Colonia o Municipio:</label>
+          <input type="text" id="colonia" class="form-control" placeholder="Ej. Centro, Monterrey">
+        </div>
+
+        <div class="form-group">
+          <label for="distanciaKm">Distancia desde Bodega (km):</label>
+          <div class="input-with-button">
+            <input type="number" id="distanciaKm" class="form-control" placeholder="Ej. 15" min="0" step="0.1">
+            <button type="button" id="btnGps" class="btn-gps" data-action="gps">
+              📍 Ubicación GPS
+            </button>
           </div>
-          <div class="input-field">
-            <label for="maniobra">Maniobra de descarga</label>
-            <select id="maniobra">
-              <option value="sin">Sin maniobra (Cliente descarga)</option>
-              <option value="con">Con maniobra (Provac descarga)</option>
+          <small id="gpsStatusText" class="status-text"></small>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="form-group">
+            <label for="fechaEnvio">Fecha de Envío:</label>
+            <input type="date" id="fechaEnvio" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="maniobra">Maniobra de Carga/Descarga:</label>
+            <select id="maniobra" class="form-control">
+              <option value="sin">Sin Maniobra (Sólo Chofer)</option>
+              <option value="con">Con Maniobra (+ $3.50/u)</option>
             </select>
           </div>
         </div>
 
-        <!-- DIRECCIÓN DE RECOLECCIÓN (ORIGEN) -->
-        <div class="address-section">
-          <h5 style="margin: 15px 0 10px 0; color: var(--text-color, #1e293b); font-size: 0.95rem;">📍 Dirección de Recolección (Origen)</h5>
-          
-          <button type="button" class="btn-gps-loc" onclick="obtenerUbicacionOrigen()">
-            <span class="icon">📍</span> Usar mi ubicación actual como origen
-          </button>
-          <span id="gpsOrigenStatusText" class="gps-hint"></span>
-
-          <div class="input-row cols-2">
-            <div class="input-field">
-              <label for="origenCalle">Calle</label>
-              <input type="text" id="origenCalle" placeholder="Ej: Av. Constitución">
-            </div>
-            <div class="input-field">
-              <label for="origenNumero">Número Ext/Int</label>
-              <input type="text" id="origenNumero" placeholder="Ej: 1200 Ext">
-            </div>
-          </div>
-
-          <div class="input-row cols-2">
-            <div class="input-field">
-              <label for="origenColonia">Colonia / Municipio</label>
-              <input type="text" id="origenColonia" placeholder="Ej: Centro, Monterrey">
-            </div>
-            <div class="input-field">
-              <label for="origenCP">Código Postal</label>
-              <input type="text" id="origenCP" placeholder="Ej: 64000" maxlength="5">
-            </div>
-          </div>
+        <div class="result-box">
+          <div id="precioTotal" class="precio-total">$0 <small>MXN</small></div>
+          <small id="desgloseText" class="status-text">Ingresa los datos para cotizar</small>
         </div>
 
-        <!-- DIRECCIÓN DE ENTREGA (DESTINO FINAL) -->
-        <div class="address-section" style="margin-top: 15px;">
-          <h5 style="margin: 15px 0 10px 0; color: var(--text-color, #1e293b); font-size: 0.95rem;">🏁 Dirección de Entrega (Destino Final)</h5>
-          
-          <button type="button" class="btn-gps-loc" onclick="obtenerUbicacionDestino()">
-            <span class="icon">📍</span> Usar mi ubicación actual como destino
-          </button>
-          <span id="gpsDestinoStatusText" class="gps-hint"></span>
-
-          <div class="input-row cols-2">
-            <div class="input-field">
-              <label for="destinoCalle">Calle</label>
-              <input type="text" id="destinoCalle" placeholder="Ej: Av. Félix U. Gómez">
-            </div>
-            <div class="input-field">
-              <label for="destinoNumero">Número Ext/Int</label>
-              <input type="text" id="destinoNumero" placeholder="Ej: 4500">
-            </div>
-          </div>
-
-          <div class="input-row cols-2">
-            <div class="input-field">
-              <label for="destinoColonia">Colonia / Municipio</label>
-              <input type="text" id="destinoColonia" placeholder="Ej: Industrial, Monterrey">
-            </div>
-            <div class="input-field">
-              <label for="destinoCP">Código Postal</label>
-              <input type="text" id="destinoCP" placeholder="Ej: 64440" maxlength="5">
-            </div>
-          </div>
-        </div>
-
-        <!-- DISTANCIA EN KM CALCULADA / MANUAL -->
-        <div class="input-field" style="margin-top: 15px;">
-          <label for="distanciaKm">Distancia Estimada (Km)</label>
-          <input type="number" id="distanciaKm" placeholder="Se calcula con la dirección o ingresa manualmente" min="1" step="0.1">
-        </div>
-
-        <!-- RESUMEN PRECIO -->
-        <div class="price-summary-card">
-          <span class="price-label">Estimación Total</span>
-          <div class="price-value" id="precioTotal">$0 <small>MXN</small></div>
-          <p id="desgloseText" class="price-sub">Ingresa las especificaciones</p>
-        </div>
-
-        <button type="button" id="btnWhatsapp" class="btn-submit-wa" disabled>
-          Solicitar Unidades por WhatsApp
+        <button type="button" id="btnWhatsapp" class="btn-whatsapp" disabled>
+          💬 Solicitar Flete por WhatsApp
         </button>
+
       </form>
     </div>
   </div>
-
-  <!-- FOOTER -->
-  <footer class="main-footer" id="contacto">
-    <div class="footer-container">
-      <div class="footer-col brand">
-        <div class="brand-logo">
-          <span>PROVAC <strong>EXPRESS</strong></span>
-        </div>
-        <p>Logística y distribución eficiente para el sector comercial e industrial en el noreste de México.</p>
-      </div>
-
-      <div class="footer-col">
-        <h4>Servicios</h4>
-        <ul>
-          <li><a href="#servicios">Fletes Locales</a></li>
-          <li><a href="#servicios">Cadena de Frío</a></li>
-          <li><a href="#catalogo">Catálogo de Cargas</a></li>
-        </ul>
-      </div>
-
-      <div class="footer-col">
-        <h4>Contacto Directo</h4>
-        <p>📍 Apodaca / Monterrey, Nuevo León</p>
-        <p>📱 +52 (81) 1761-6817</p>
-      </div>
-    </div>
-
-    <div class="footer-bottom">
-      <p>© 2026 Provac Express. Todos los derechos reservados.</p>
-    </div>
-  </footer>
 
   <script src="script.js"></script>
 </body>
