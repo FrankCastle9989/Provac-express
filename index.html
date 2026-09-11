@@ -3,580 +3,165 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Provac Express - Cotizador de Fletes</title>
-
-  <style>
-    :root {
-      --primary: #d97706; /* Naranja Provac */
-      --primary-hover: #b45309;
-      --secondary: #1e3a8a; /* Azul Corporativo */
-      --bg: #f3f4f6;
-      --card-bg: #ffffff;
-      --text-main: #1f2937;
-      --text-muted: #6b7280;
-      --border: #e5e7eb;
-      --success: #16a34a;
-      --danger: #dc2626;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    }
-
-    body {
-      background-color: var(--bg);
-      color: var(--text-main);
-      display: flex;
-      justify-content: center;
-      padding: 20px;
-      line-height: 1.5;
-    }
-
-    .container {
-      background: var(--card-bg);
-      width: 100%;
-      max-width: 680px;
-      padding: 25px;
-      border-radius: 12px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-    }
-
-    header {
-      text-align: center;
-      margin-bottom: 20px;
-      border-bottom: 2px solid var(--bg);
-      padding-bottom: 15px;
-    }
-
-    .logo-title {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 5px;
-    }
-
-    .logo-title h1 {
-      color: var(--secondary);
-      font-size: 1.8rem;
-    }
-
-    header p {
-      color: var(--text-muted);
-      font-size: 0.95rem;
-    }
-
-    .section-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--secondary);
-      margin: 25px 0 15px 0;
-    }
-
-    .grid-3 {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-      gap: 12px;
-    }
-
-    .grid-2 {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 12px;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      margin-bottom: 12px;
-    }
-
-    label {
-      font-size: 0.85rem;
-      font-weight: 600;
-      margin-bottom: 5px;
-      color: #374151;
-    }
-
-    input, select {
-      padding: 10px 12px;
-      border: 1px solid #d1d5db;
-      border-radius: 8px;
-      font-size: 0.95rem;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
-    input:focus, select:focus {
-      border-color: var(--primary);
-    }
-
-    input[readonly] {
-      background-color: #f9fafb;
-      color: var(--text-muted);
-    }
-
-    /* Botón GPS */
-    .btn-gps {
-      background: #3b82f6;
-      color: white;
-      border: none;
-      padding: 10px 15px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      border-radius: 8px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      margin-bottom: 15px;
-      width: 100%;
-      transition: background 0.2s;
-    }
-
-    .btn-gps:hover {
-      background: #2563eb;
-    }
-
-    .gps-status {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      margin-top: -8px;
-      margin-bottom: 12px;
-      text-align: center;
-    }
-
-    /* Monitor visual de peso Saveiro */
-    .capacity-monitor {
-      background: #f8fafc;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 15px;
-      margin-top: 15px;
-    }
-
-    .progress-bar-bg {
-      background: #e2e8f0;
-      height: 10px;
-      border-radius: 5px;
-      overflow: hidden;
-      margin-top: 5px;
-    }
-
-    .progress-bar-fill {
-      height: 100%;
-      width: 0%;
-      background: var(--success);
-      border-radius: 5px;
-      transition: width 0.3s ease, background-color 0.3s ease;
-    }
-
-    /* Alertas */
-    .alert {
-      padding: 12px;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      margin-top: 15px;
-      display: none;
-    }
-
-    .alert-error {
-      background: #fee2e2;
-      color: var(--danger);
-      border: 1px solid #fca5a5;
-    }
-
-    /* Resumen de Precio */
-    .result-box {
-      margin-top: 25px;
-      background: #fffbeef;
-      border: 2px dashed var(--primary);
-      border-radius: 12px;
-      padding: 20px;
-      text-align: center;
-    }
-
-    .result-price {
-      font-size: 2.3rem;
-      font-weight: 800;
-      color: var(--primary);
-      margin: 5px 0;
-    }
-
-    .btn-whatsapp {
-      width: 100%;
-      background: var(--success);
-      color: white;
-      border: none;
-      padding: 15px;
-      font-size: 1rem;
-      font-weight: 700;
-      border-radius: 8px;
-      cursor: pointer;
-      margin-top: 15px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      transition: background 0.2s;
-    }
-
-    .btn-whatsapp:hover {
-      background: #15803d;
-    }
-
-    .btn-whatsapp:disabled {
-      background: #9ca3af;
-      cursor: not-allowed;
-    }
-
-    footer {
-      text-align: center;
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      margin-top: 25px;
-    }
-  </style>
+  <title>Provac Express | Logística y Fletes Mayoristas</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="container">
-  <header>
-    <div class="logo-title">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1e3a8a" stroke-width="2"><path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-      <h1>PROVAC EXPRESS</h1>
+  <!-- HERO HEADER -->
+  <header class="hero-header">
+    <nav class="navbar">
+      <div class="logo">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        <span>PROVAC <strong>EXPRESS</strong></span>
+      </div>
+      <button class="btn-secondary" id="openCalcNav">Cotizar Flete</button>
+    </nav>
+
+    <div class="hero-content">
+      <span class="badge">Logística Inteligente 2026</span>
+      <h1>Distribución Mayorista Ágil y Confiable</h1>
+      <p>Calcula el costo exacto de tu envío en segundos con nuestra herramienta de geolocalización en tiempo real.</p>
+      
+      <div class="hero-actions">
+        <button class="btn-primary" id="openCalcHero">
+          <span>📍</span> Cotizar Envío Ahora
+        </button>
+      </div>
     </div>
-    <p>Cotizador automático de distribución al por mayor</p>
   </header>
 
-  <form id="cotizadorForm" onsubmit="return false;">
-    
-    <!-- PASO 1: ESPECIFICACIONES DE CARGA -->
-    <div class="section-header">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-      <span>1. Especificaciones de la Carga</span>
+  <!-- FEATURES -->
+  <section class="features">
+    <div class="feature-card">
+      <div class="icon">⚡</div>
+      <h3>Cotización Instantánea</h3>
+      <p>Algoritmos avanzados de cálculo por volumen, peso y kilometraje dinámico.</p>
     </div>
-
-    <div class="grid-3">
-      <div class="form-group">
-        <label for="largo">Largo caja (cm)</label>
-        <input type="number" id="largo" placeholder="Ej: 40" required min="1">
-      </div>
-      <div class="form-group">
-        <label for="ancho">Ancho caja (cm)</label>
-        <input type="number" id="ancho" placeholder="Ej: 30" required min="1">
-      </div>
-      <div class="form-group">
-        <label for="alto">Alto caja (cm)</label>
-        <input type="number" id="alto" placeholder="Ej: 25" required min="1">
-      </div>
+    <div class="feature-card">
+      <div class="icon">📍</div>
+      <h3>Ubicación GPS Directa</h3>
+      <p>Estimación automática de distancia sin la necesidad de mapas pesados.</p>
     </div>
-
-    <div class="grid-2">
-      <div class="form-group">
-        <label for="peso">Peso por caja (kg)</label>
-        <input type="number" id="peso" step="0.1" placeholder="Ej: 10" required min="0.1">
-      </div>
-      <div class="form-group">
-        <label for="cantidad">Cantidad de cajas</label>
-        <input type="number" id="cantidad" placeholder="Ej: 30" required min="1">
-      </div>
+    <div class="feature-card">
+      <div class="icon">🚚</div>
+      <h3>Flota Optimizada</h3>
+      <p>Unidades Saveiro listas para carga pesada y distribución urbana eficiente.</p>
     </div>
+  </section>
 
-    <!-- Monitor visual de peso Saveiro -->
-    <div class="capacity-monitor">
-      <div style="display:flex; justify-content:space-between; font-size: 0.85rem;">
-        <span>Ocupación de peso en Saveiro (Máx 650 kg):</span>
-        <strong id="pesoText">0 kg / 650 kg</strong>
+  <!-- MODAL POP-UP CALCULADORA -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-card">
+      <button class="modal-close" id="closeModal">&times;</button>
+      
+      <div class="modal-header">
+        <h2>Cotizador de Fletes Express</h2>
+        <p>Completa las especificaciones de tu carga</p>
       </div>
-      <div class="progress-bar-bg">
-        <div id="pesoBar" class="progress-bar-fill"></div>
-      </div>
-    </div>
 
-    <div id="alertBox" class="alert alert-error"></div>
-
-    <!-- PASO 2: PROGRAMACIÓN Y RUTA -->
-    <div class="section-header">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 7 8 11.7z"/></svg>
-      <span>2. Programación y Ruta de Entrega</span>
-    </div>
-
-    <div class="grid-2">
-      <div class="form-group">
-        <label for="fechaEnvio">Fecha de Programación del Envío</label>
-        <input type="date" id="fechaEnvio" required>
-      </div>
-      <div class="form-group">
-        <label for="maniobra">Servicio de Maniobra</label>
-        <select id="maniobra">
-          <option value="sin">Sin maniobra (Cliente descarga)</option>
-          <option value="con">Con maniobra (Provac descarga)</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="form-group">
-      <label>Bodega de Origen (Partida)</label>
-      <input type="text" id="bodegaOrigen" value="Manuel P. de Llano 1106, Constituyentes del 57, 64260 Monterrey, N.L." readonly>
-    </div>
-
-    <!-- Campos de dirección estructurada -->
-    <div class="grid-2">
-      <div class="form-group">
-        <label for="calle">Calle y Número de Entrega</label>
-        <input type="text" id="calle" placeholder="Ej: Av. Constitución 400">
-      </div>
-      <div class="form-group">
-        <label for="colonia">Colonia</label>
-        <input type="text" id="colonia" placeholder="Ej: Centro">
-      </div>
-    </div>
-
-    <div class="grid-2">
-      <div class="form-group">
-        <label for="municipio">Municipio / Ciudad</label>
-        <input type="text" id="municipio" placeholder="Ej: Monterrey, NL">
-      </div>
-      <div class="form-group">
-        <label for="cp">Código Postal</label>
-        <input type="text" id="cp" placeholder="Ej: 64000">
-      </div>
-    </div>
-
-    <!-- BOTÓN DE GPS PARA CÁLCULO AUTOMÁTICO -->
-    <button type="button" class="btn-gps" onclick="obtenerUbicacionYCalcular()">
-      📍 Usar mi ubicación actual para calcular distancia
-    </button>
-    <div id="gpsStatus" class="gps-status"></div>
-
-    <div class="form-group">
-      <label for="distanciaKm">Distancia Estimada desde Bodega (km)</label>
-      <input type="number" id="distanciaKm" placeholder="Ej: 12" min="1" step="0.1">
-    </div>
-
-    <!-- COTIZACIÓN FINAL -->
-    <div class="result-box">
-      <div style="font-size:0.85rem; color: var(--text-muted); text-transform:uppercase;">Total Estimado del Flete</div>
-      <div class="result-price" id="precioTotal">$0 MXN</div>
-      <small id="desgloseText">Ingresa los datos de carga y distancia para cotizar</small>
-    </div>
-
-    <!-- BOTÓN WHATSAPP -->
-    <button type="button" id="btnWhatsapp" class="btn-whatsapp" disabled>
-      <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-1.156 4.221 4.299-1.127z"/></svg>
-      Enviar Solicitud a WhatsApp (81 1761 6817)
-    </button>
-  </form>
-
-  <footer>
-    © 2026 Provac Distribución. Todos los derechos reservados.
-  </footer>
-</div>
-
-<script>
-  // Configuración de WhatsApp y Saveiro
-  const NUMERO_WHATSAPP = "528117616817";
-  const SAVEIRO_LIMITS = {
-    MAX_PESO: 650,        // kg
-    MAX_ANCHO_UTIL: 100,  // cm
-    MAX_VOLUMEN: 0.825    // m3
-  };
-
-  // Coordenadas Fijas de la Bodega Provac (Manuel P. de Llano 1106, Monterrey, NL)
-  const BODEGA_PROVAC = {
-    lat: 25.6866,
-    lon: -100.3161
-  };
-
-  // Tarifas de Cotización
-  const TARIFA_BASE = 200;
-  const PRECIO_KM = 14;
-  const PRECIO_MANIOBRA_CAJA = 3.5;
-
-  // Inicializar fecha mínima (hoy)
-  const fechaInput = document.getElementById('fechaEnvio');
-  const hoy = new Date().toISOString().split('T')[0];
-  fechaInput.min = hoy;
-  fechaInput.value = hoy;
-
-  // Escuchar eventos en inputs para recálculo automático
-  document.querySelectorAll('input, select').forEach(elem => {
-    elem.addEventListener('input', calcularCotizacion);
-  });
-
-  // --- LÓGICA DE GEOLOCALIZACIÓN GPS ---
-  function obtenerUbicacionYCalcular() {
-    const gpsStatus = document.getElementById('gpsStatus');
-
-    if (!navigator.geolocation) {
-      gpsStatus.innerText = "La geolocalización no es compatible con este navegador.";
-      return;
-    }
-
-    gpsStatus.innerText = "Obteniendo ubicación del GPS...";
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const userLat = position.coords.latitude;
-        const userLon = position.coords.longitude;
-
-        // Calcular distancia Haversine
-        const distanciaDirecta = calcularHaversine(userLat, userLon, BODEGA_PROVAC.lat, BODEGA_PROVAC.lon);
+      <form id="cotizadorForm" onsubmit="return false;">
+        <!-- PASO 1: ESPECIFICACIONES DE CARGA -->
+        <div class="section-title">1. Especificaciones de Carga</div>
         
-        // Multiplicador aproximado (1.30) para ajustar la línea recta a distancia vial estimada
-        const distanciaVialEstimada = Math.round((distanciaDirecta * 1.30) * 10) / 10;
+        <div class="grid-3">
+          <div class="form-group">
+            <label for="largo">Largo (cm)</label>
+            <input type="number" id="largo" placeholder="Ej: 40" min="1">
+          </div>
+          <div class="form-group">
+            <label for="ancho">Ancho (cm)</label>
+            <input type="number" id="ancho" placeholder="Ej: 30" min="1">
+          </div>
+          <div class="form-group">
+            <label for="alto">Alto (cm)</label>
+            <input type="number" id="alto" placeholder="Ej: 25" min="1">
+          </div>
+        </div>
 
-        // Asignar al input de distancia
-        document.getElementById('distanciaKm').value = distanciaVialEstimada;
-        gpsStatus.innerText = `Ubicación detectada (Distancia estimada: ${distanciaVialEstimada} km)`;
+        <div class="grid-2">
+          <div class="form-group">
+            <label for="peso">Peso unitario (kg)</label>
+            <input type="number" id="peso" step="0.1" placeholder="Ej: 10" min="0.1">
+          </div>
+          <div class="form-group">
+            <label for="cantidad">Cajas totales</label>
+            <input type="number" id="cantidad" placeholder="Ej: 30" min="1">
+          </div>
+        </div>
 
-        // Recalcular cotización de inmediato
-        calcularCotizacion();
-      },
-      (error) => {
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            gpsStatus.innerText = "Permiso de ubicación denegado.";
-            break;
-          case error.POSITION_UNAVAILABLE:
-            gpsStatus.innerText = "Ubicación no disponible.";
-            break;
-          case error.TIMEOUT:
-            gpsStatus.innerText = "Expiró la solicitud de ubicación.";
-            break;
-          default:
-            gpsStatus.innerText = "Error al obtener ubicación.";
-            break;
-        }
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
-  }
+        <!-- Monitor de Capacidad -->
+        <div class="capacity-monitor">
+          <div class="capacity-header">
+            <span>Ocupación Saveiro (Máx 650 kg):</span>
+            <strong id="pesoText">0 kg / 650 kg</strong>
+          </div>
+          <div class="progress-bar-bg">
+            <div id="pesoBar" class="progress-bar-fill"></div>
+          </div>
+        </div>
 
-  // Fórmula de Haversine
-  function calcularHaversine(lat1, lon1, lat2, lon2) {
-    const R = 6371; // Radio de la Tierra en km
-    const dLat = (lat2 - lat1) * (Math.PI / 180);
-    const dLon = (lon2 - lon1) * (Math.PI / 180);
+        <div id="alertBox" class="alert alert-error"></div>
 
-    const a = 
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * 
-      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        <!-- PASO 2: RUTA Y GPS -->
+        <div class="section-title">2. Programación y Ubicación</div>
 
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  }
+        <div class="grid-2">
+          <div class="form-group">
+            <label for="fechaEnvio">Fecha de Envío</label>
+            <input type="date" id="fechaEnvio">
+          </div>
+          <div class="form-group">
+            <label for="maniobra">Servicio de Maniobra</label>
+            <select id="maniobra">
+              <option value="sin">Sin maniobra (Cliente descarga)</option>
+              <option value="con">Con maniobra (Provac descarga)</option>
+            </select>
+          </div>
+        </div>
 
-  // --- ALGORITMO PRINCIPAL DE COTIZACIÓN ---
-  function calcularCotizacion() {
-    const largo = parseFloat(document.getElementById('largo').value) || 0;
-    const ancho = parseFloat(document.getElementById('ancho').value) || 0;
-    const alto = parseFloat(document.getElementById('alto').value) || 0;
-    const pesoUnitario = parseFloat(document.getElementById('peso').value) || 0;
-    const cantidad = parseInt(document.getElementById('cantidad').value) || 0;
-    const distanciaKm = parseFloat(document.getElementById('distanciaKm').value) || 0;
-    const requiereManiobra = document.getElementById('maniobra').value === 'con';
+        <button type="button" class="btn-gps" onclick="obtenerUbicacionYCalcular()">
+          📍 Usar mi ubicación GPS para la distancia
+        </button>
+        <div id="gpsStatus" class="gps-status"></div>
 
-    const alertBox = document.getElementById('alertBox');
-    const precioTotalEl = document.getElementById('precioTotal');
-    const desgloseText = document.getElementById('desgloseText');
-    const btnWhatsapp = document.getElementById('btnWhatsapp');
+        <div class="form-group">
+          <label for="distanciaKm">Distancia Estimada desde Bodega (km)</label>
+          <input type="number" id="distanciaKm" placeholder="Ej: 12" min="1" step="0.1">
+        </div>
 
-    alertBox.style.display = 'none';
-    btnWhatsapp.disabled = true;
+        <!-- DIRECCIÓN ESPECÍFICA -->
+        <div class="grid-2">
+          <div class="form-group">
+            <label for="calle">Calle y Número</label>
+            <input type="text" id="calle" placeholder="Ej: Av. Constitución 400">
+          </div>
+          <div class="form-group">
+            <label for="colonia">Colonia / Municipio</label>
+            <input type="text" id="colonia" placeholder="Ej: Centro, Monterrey">
+          </div>
+        </div>
 
-    if (cantidad === 0 || pesoUnitario === 0) {
-      actualizarBarraPeso(0);
-      precioTotalEl.innerText = "$0 MXN";
-      desgloseText.innerText = "Completa los datos de carga para cotizar";
-      return;
-    }
+        <!-- RESULTADO Y BOTÓN -->
+        <div class="result-box">
+          <span class="result-title">Costo Estimado</span>
+          <div class="result-price" id="precioTotal">$0 MXN</div>
+          <small id="desgloseText">Ingresa los datos para calcular</small>
+        </div>
 
-    // Validación Física
-    const pesoTotal = pesoUnitario * cantidad;
-    const volumenTotalM3 = ((largo * ancho * alto) / 1000000) * cantidad;
+        <button type="button" id="btnWhatsapp" class="btn-whatsapp" disabled>
+          Enviar Solicitud por WhatsApp
+        </button>
+      </form>
+    </div>
+  </div>
 
-    actualizarBarraPeso(pesoTotal);
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <p>© 2026 Provac Express. Todos los derechos reservados.</p>
+    <p class="muted">Distribución y logística inteligente en la Zona Metropolitana de Monterrey.</p>
+  </footer>
 
-    let errorMsg = "";
-    if (pesoTotal > SAVEIRO_LIMITS.MAX_PESO) {
-      errorMsg = `🔴 Exceso de peso: Carga de ${pesoTotal.toFixed(1)} kg supera el límite de 650 kg de la Saveiro.`;
-    } else if (ancho > SAVEIRO_LIMITS.MAX_ANCHO_UTIL && largo > SAVEIRO_LIMITS.MAX_ANCHO_UTIL) {
-      errorMsg = `🟡 Dimensión no permitida: Las cajas (${largo}x${ancho} cm) no entran en el ancho útil de batea (100 cm).`;
-    } else if (volumenTotalM3 > SAVEIRO_LIMITS.MAX_VOLUMEN) {
-      errorMsg = `🟡 Exceso de volumen: Ocupa ${volumenTotalM3.toFixed(2)} m³, superando el volumen recomendado (0.82 m³).`;
-    }
-
-    if (errorMsg !== "") {
-      alertBox.innerText = errorMsg;
-      alertBox.style.display = 'block';
-      precioTotalEl.innerText = "No disponible";
-      desgloseText.innerText = "Ajusta la carga para cotizar";
-      return;
-    }
-
-    if (distanciaKm <= 0) {
-      precioTotalEl.innerText = "$0 MXN";
-      desgloseText.innerText = "Ingresa la distancia estimada o usa tu GPS";
-      return;
-    }
-
-    // Cálculo Monetario
-    let factorPeso = pesoTotal > 400 ? 1.15 : 1.0;
-    let costoDistancia = distanciaKm * PRECIO_KM;
-    let costoManiobra = requiereManiobra ? (cantidad * PRECIO_MANIOBRA_CAJA) : 0;
-    let precioFinal = Math.round(((TARIFA_BASE + costoDistancia) * factorPeso) + costoManiobra);
-
-    precioTotalEl.innerText = `$${precioFinal.toLocaleString()} MXN`;
-    desgloseText.innerText = `Incluye: Tarifa base + ${distanciaKm} km ${requiereManiobra ? '+ maniobra' : ''}`;
-    btnWhatsapp.disabled = false;
-
-    // Configuración del mensaje para WhatsApp
-    btnWhatsapp.onclick = () => {
-      const fechaEnvio = document.getElementById('fechaEnvio').value;
-      const calle = document.getElementById('calle').value || 'No especificada';
-      const colonia = document.getElementById('colonia').value || '';
-      const municipio = document.getElementById('municipio').value || '';
-      const cp = document.getElementById('cp').value || '';
-
-      const mensaje = `Hola Provac, quiero programar un flete mayorista con los siguientes datos:%0A%0A` +
-        `📅 *Fecha requerida:* ${fechaEnvio}%0A` +
-        `📦 *Mercancía:* ${cantidad} cajas de ${pesoUnitario} kg c/u (Total: ${pesoTotal} kg)%0A` +
-        `📐 *Medidas caja:* ${largo}x${ancho}x${alto} cm%0A` +
-        `📍 *Dirección de Entrega:* ${calle}, ${colonia}, ${municipio} CP ${cp}%0A` +
-        `🗺️ *Distancia:* ${distanciaKm} km%0A` +
-        `🤝 *Maniobra:* ${requiereManiobra ? 'Sí' : 'No'}%0A` +
-        `💰 *Cotización Estimada:* $${precioFinal} MXN`;
-
-      window.open(`https://wa.me/${NUMERO_WHATSAPP}?text=${mensaje}`, '_blank');
-    };
-  }
-
-  function actualizarBarraPeso(pesoTotal) {
-    const pesoBar = document.getElementById('pesoBar');
-    const pesoText = document.getElementById('pesoText');
-    const porcentaje = Math.min((pesoTotal / SAVEIRO_LIMITS.MAX_PESO) * 100, 100);
-
-    pesoBar.style.width = `${porcentaje}%`;
-    pesoText.innerText = `${pesoTotal.toFixed(1)} kg / ${SAVEIRO_LIMITS.MAX_PESO} kg`;
-
-    if (pesoTotal > SAVEIRO_LIMITS.MAX_PESO) {
-      pesoBar.style.background = "var(--danger)";
-    } else if (porcentaje > 80) {
-      pesoBar.style.background = "#eab308";
-    } else {
-      pesoBar.style.background = "var(--success)";
-    }
-  }
-</script>
+  <script src="script.js"></script>
 </body>
 </html>
