@@ -2,117 +2,183 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Provac Express | Logística y Fletes Mayoristas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Provac Express | Logística, Distribución y Fletes Mayoristas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <!-- HERO HEADER -->
-  <header class="hero-header">
-    <nav class="navbar">
-      <div class="logo">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+  <!-- NAVIGATION BAR -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="#" class="brand-logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        </div>
         <span>PROVAC <strong>EXPRESS</strong></span>
-      </div>
-      <button class="btn-secondary" id="openCalcNav">Cotizar Flete</button>
-    </nav>
-
-    <div class="hero-content">
-      <span class="badge">Logística Inteligente 2026</span>
-      <h1>Distribución Mayorista Ágil y Confiable</h1>
-      <p>Calcula el costo exacto de tu envío en segundos con nuestra herramienta de geolocalización en tiempo real.</p>
+      </a>
       
-      <div class="hero-actions">
-        <button class="btn-primary" id="openCalcHero">
-          <span>📍</span> Cotizar Envío Ahora
+      <div class="nav-links">
+        <a href="#servicios">Servicios</a>
+        <a href="#cobertura">Cobertura</a>
+        <a href="#flota">Flota</a>
+      </div>
+
+      <div class="nav-actions">
+        <button class="btn-glow" onclick="toggleModal(true)">
+          <span>⚡ Cotizar Flete</span>
         </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO SECTION -->
+  <header class="hero-section">
+    <div class="hero-bg-glow"></div>
+    <div class="hero-container">
+      <div class="hero-badge">
+        <span class="pulse-dot"></span> Cadena Fría y Logística 2026
+      </div>
+      <h1>Distribución Mayorista <br><span class="gradient-text">Especializada en Monterrey</span></h1>
+      <p>Infraestructura logística de alto rendimiento. Soluciones integrales de almacenaje, logística de frío y entrega de última milla para el canal de detalle.</p>
+      
+      <div class="hero-cta-group">
+        <button class="btn-primary" onclick="toggleModal(true)">
+          <span>📍 Cotizar Envío por GPS</span>
+        </button>
+        <a href="#servicios" class="btn-outline">Explorar Soluciones</a>
+      </div>
+
+      <!-- Live Metrics Dashboard Preview -->
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <span class="metric-val">+99.2%</span>
+          <span class="metric-lbl">Entregas a Tiempo</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-val">650 kg</span>
+          <span class="metric-lbl">Capacidad por Unidad Saveiro</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-val">&lt; 15 min</span>
+          <span class="metric-lbl">Tiempo de Respuesta</span>
+        </div>
       </div>
     </div>
   </header>
 
-  <!-- FEATURES -->
-  <section class="features">
-    <div class="feature-card">
-      <div class="icon">⚡</div>
-      <h3>Cotización Instantánea</h3>
-      <p>Algoritmos avanzados de cálculo por volumen, peso y kilometraje dinámico.</p>
+  <!-- SERVICIOS / COMPARATIVA LOGYCOM & PARVADA -->
+  <section class="services-section" id="servicios">
+    <div class="section-header">
+      <h2>Soluciones Logísticas Integrales</h2>
+      <p>Diseñadas para optimizar tus tiempos de entrega y garantizar la frescura del producto.</p>
     </div>
-    <div class="feature-card">
-      <div class="icon">📍</div>
-      <h3>Ubicación GPS Directa</h3>
-      <p>Estimación automática de distancia sin la necesidad de mapas pesados.</p>
-    </div>
-    <div class="feature-card">
-      <div class="icon">🚚</div>
-      <h3>Flota Optimizada</h3>
-      <p>Unidades Saveiro listas para carga pesada y distribución urbana eficiente.</p>
+
+    <div class="services-grid">
+      <div class="service-card">
+        <div class="service-icon">🚚</div>
+        <h3>Fletes y Distribución Local</h3>
+        <p>Rutas optimizadas en la Zona Metropolitana de Monterrey para entrega en tiendas y centros de abasto.</p>
+        <ul class="service-list">
+          <li>✔ Unidades Volkswagen Saveiro</li>
+          <li>✔ Seguimiento satelital en tiempo real</li>
+        </ul>
+      </div>
+
+      <div class="service-card featured">
+        <div class="service-tag">Más Solicitado</div>
+        <div class="service-icon">❄️</div>
+        <h3>Cadena Fría y Almacenaje</h3>
+        <p>Control riguroso de temperatura para conservación de carnes frías, lácteos y perecederos.</p>
+        <ul class="service-list">
+          <li>✔ Monitoreo térmico continuo</li>
+          <li>✔ Descarga y maniobra profesional</li>
+        </ul>
+      </div>
+
+      <div class="service-card">
+        <div class="service-icon">📊</div>
+        <h3>Gestión de Ruta y Canal Detalle</h3>
+        <p>Estrategias avanzadas de cobro, entrega y administración de inventario en punto de venta.</p>
+        <ul class="service-list">
+          <li>✔ Cobertura multirruta</li>
+          <li>✔ Indicadores de efectividad</li>
+        </ul>
+      </div>
     </div>
   </section>
 
-  <!-- MODAL POP-UP CALCULADORA -->
-  <div class="modal-overlay" id="modalOverlay">
-    <div class="modal-card">
-      <button class="modal-close" id="closeModal">&times;</button>
+  <!-- MODAL POP-UP CALCULADORA RESPONSIVA -->
+  <div class="modal-backdrop" id="modalBackdrop">
+    <div class="modal-window">
+      <button class="modal-close-btn" onclick="toggleModal(false)">&times;</button>
       
-      <div class="modal-header">
-        <h2>Cotizador de Fletes Express</h2>
-        <p>Completa las especificaciones de tu carga</p>
+      <div class="modal-title-group">
+        <span class="badge-mini">Cotizador Inteligente</span>
+        <h2>Calculadora de Fletes Express</h2>
+        <p>Estima el costo exacto según volumen, peso y distancia real.</p>
       </div>
 
-      <form id="cotizadorForm" onsubmit="return false;">
-        <!-- PASO 1: ESPECIFICACIONES DE CARGA -->
-        <div class="section-title">1. Especificaciones de Carga</div>
-        
-        <div class="grid-3">
-          <div class="form-group">
+      <form id="calcForm" onsubmit="return false;">
+        <div class="form-step">
+          <span class="step-num">01</span>
+          <h4>Especificaciones del Empaque</h4>
+        </div>
+
+        <div class="input-row cols-3">
+          <div class="input-field">
             <label for="largo">Largo (cm)</label>
             <input type="number" id="largo" placeholder="Ej: 40" min="1">
           </div>
-          <div class="form-group">
+          <div class="input-field">
             <label for="ancho">Ancho (cm)</label>
             <input type="number" id="ancho" placeholder="Ej: 30" min="1">
           </div>
-          <div class="form-group">
+          <div class="input-field">
             <label for="alto">Alto (cm)</label>
             <input type="number" id="alto" placeholder="Ej: 25" min="1">
           </div>
         </div>
 
-        <div class="grid-2">
-          <div class="form-group">
-            <label for="peso">Peso unitario (kg)</label>
-            <input type="number" id="peso" step="0.1" placeholder="Ej: 10" min="0.1">
+        <div class="input-row cols-2">
+          <div class="input-field">
+            <label for="peso">Peso C/U (kg)</label>
+            <input type="number" id="peso" step="0.1" placeholder="Ej: 12" min="0.1">
           </div>
-          <div class="form-group">
-            <label for="cantidad">Cajas totales</label>
-            <input type="number" id="cantidad" placeholder="Ej: 30" min="1">
-          </div>
-        </div>
-
-        <!-- Monitor de Capacidad -->
-        <div class="capacity-monitor">
-          <div class="capacity-header">
-            <span>Ocupación Saveiro (Máx 650 kg):</span>
-            <strong id="pesoText">0 kg / 650 kg</strong>
-          </div>
-          <div class="progress-bar-bg">
-            <div id="pesoBar" class="progress-bar-fill"></div>
+          <div class="input-field">
+            <label for="cantidad">Cajas Totales</label>
+            <input type="number" id="cantidad" placeholder="Ej: 25" min="1">
           </div>
         </div>
 
-        <div id="alertBox" class="alert alert-error"></div>
+        <!-- Visualizador de Carga -->
+        <div class="load-gauge">
+          <div class="gauge-labels">
+            <span>Ocupación de la Unidad</span>
+            <strong id="gaugeText">0 kg / 650 kg</strong>
+          </div>
+          <div class="gauge-bar">
+            <div id="gaugeFill" class="gauge-fill"></div>
+          </div>
+        </div>
 
-        <!-- PASO 2: RUTA Y GPS -->
-        <div class="section-title">2. Programación y Ubicación</div>
+        <div id="alertNotice" class="alert-banner"></div>
 
-        <div class="grid-2">
-          <div class="form-group">
-            <label for="fechaEnvio">Fecha de Envío</label>
+        <div class="form-step">
+          <span class="step-num">02</span>
+          <h4>Programación y Ubicación</h4>
+        </div>
+
+        <div class="input-row cols-2">
+          <div class="input-field">
+            <label for="fechaEnvio">Fecha requerida</label>
             <input type="date" id="fechaEnvio">
           </div>
-          <div class="form-group">
-            <label for="maniobra">Servicio de Maniobra</label>
+          <div class="input-field">
+            <label for="maniobra">Maniobra de descarga</label>
             <select id="maniobra">
               <option value="sin">Sin maniobra (Cliente descarga)</option>
               <option value="con">Con maniobra (Provac descarga)</option>
@@ -120,46 +186,70 @@
           </div>
         </div>
 
-        <button type="button" class="btn-gps" onclick="obtenerUbicacionYCalcular()">
-          📍 Usar mi ubicación GPS para la distancia
+        <button type="button" class="btn-gps-loc" onclick="obtenerUbicacionGPS()">
+          <span class="icon">📍</span> Usar mi ubicación para calcular km
         </button>
-        <div id="gpsStatus" class="gps-status"></div>
+        <span id="gpsStatusText" class="gps-hint"></span>
 
-        <div class="form-group">
-          <label for="distanciaKm">Distancia Estimada desde Bodega (km)</label>
-          <input type="number" id="distanciaKm" placeholder="Ej: 12" min="1" step="0.1">
+        <div class="input-field">
+          <label for="distanciaKm">Distancia en Km (desde Bodega)</label>
+          <input type="number" id="distanciaKm" placeholder="Ej: 14" min="1" step="0.1">
         </div>
 
-        <!-- DIRECCIÓN ESPECÍFICA -->
-        <div class="grid-2">
-          <div class="form-group">
+        <div class="input-row cols-2">
+          <div class="input-field">
             <label for="calle">Calle y Número</label>
-            <input type="text" id="calle" placeholder="Ej: Av. Constitución 400">
+            <input type="text" id="calle" placeholder="Av. Félix U. Gómez 1200">
           </div>
-          <div class="form-group">
+          <div class="input-field">
             <label for="colonia">Colonia / Municipio</label>
-            <input type="text" id="colonia" placeholder="Ej: Centro, Monterrey">
+            <input type="text" id="colonia" placeholder="Monterrey, N.L.">
           </div>
         </div>
 
-        <!-- RESULTADO Y BOTÓN -->
-        <div class="result-box">
-          <span class="result-title">Costo Estimado</span>
-          <div class="result-price" id="precioTotal">$0 MXN</div>
-          <small id="desgloseText">Ingresa los datos para calcular</small>
+        <!-- RESUMEN PRECIO -->
+        <div class="price-summary-card">
+          <span class="price-label">Estimación Total</span>
+          <div class="price-value" id="precioTotal">$0 <small>MXN</small></div>
+          <p id="desgloseText" class="price-sub">Ingresa las especificaciones</p>
         </div>
 
-        <button type="button" id="btnWhatsapp" class="btn-whatsapp" disabled>
-          Enviar Solicitud por WhatsApp
+        <button type="button" id="btnWhatsapp" class="btn-submit-wa" disabled>
+          Solicitar Unidades por WhatsApp
         </button>
       </form>
     </div>
   </div>
 
   <!-- FOOTER -->
-  <footer class="site-footer">
-    <p>© 2026 Provac Express. Todos los derechos reservados.</p>
-    <p class="muted">Distribución y logística inteligente en la Zona Metropolitana de Monterrey.</p>
+  <footer class="main-footer">
+    <div class="footer-container">
+      <div class="footer-col brand">
+        <div class="brand-logo">
+          <span>PROVAC <strong>EXPRESS</strong></span>
+        </div>
+        <p>Logística y distribución eficiente para el sector comercial e industrial en el noreste de México.</p>
+      </div>
+
+      <div class="footer-col">
+        <h4>Servicios</h4>
+        <ul>
+          <li><a href="#">Fletes Locales</a></li>
+          <li><a href="#">Cadena de Frío</a></li>
+          <li><a href="#">Almacenaje</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Contacto Directo</h4>
+        <p>📍 Apodaca / Monterrey, Nuevo León</p>
+        <p>📱 +52 (81) 1761-6817</p>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>© 2026 Provac Express. Todos los derechos reservados.</p>
+    </div>
   </footer>
 
   <script src="script.js"></script>
