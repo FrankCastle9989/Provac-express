@@ -64,45 +64,91 @@
 
       <div id="alertNotice" class="alert-banner"></div>
 
-      <div class="form-step">
-        <span class="step-num">02</span>
-        <h4>Programación y Ubicación</h4>
-      </div>
 
-      <div class="input-row cols-2">
-        <div class="input-field">
-          <label for="fechaEnvio">Fecha requerida</label>
-          <input type="date" id="fechaEnvio">
-        </div>
-        <div class="input-field">
-          <label for="maniobra">Maniobra de descarga</label>
-          <select id="maniobra">
-            <option value="sin">Sin maniobra (Cliente descarga)</option>
-            <option value="con">Con maniobra (Provac descarga)</option>
-          </select>
-        </div>
-      </div>
 
-      <button type="button" class="btn-gps-loc" id="btnGps" data-action="gps">
-        <span class="icon">📍</span> Usar mi ubicación para calcular km
-      </button>
-      <span id="gpsStatusText" class="gps-hint"></span>
 
-      <div class="input-field">
-        <label for="distanciaKm">Distancia en Km (desde Bodega)</label>
-        <input type="number" id="distanciaKm" placeholder="Ej: 14" min="1" step="0.1">
-      </div>
 
-      <div class="input-row cols-2">
-        <div class="input-field">
-          <label for="calle">Calle y Número</label>
-          <input type="text" id="calle" placeholder="Av. Félix U. Gómez 1200">
-        </div>
-        <div class="input-field">
-          <label for="colonia">Colonia / Municipio</label>
-          <input type="text" id="colonia" placeholder="Monterrey, N.L.">
-        </div>
-      </div>
+
+<div class="form-step">
+  <span class="step-num">02</span>
+  <h4>Programación y Ruta de Entrega</h4>
+</div>
+
+<div class="input-row cols-2">
+  <div class="input-field">
+    <label for="fechaEnvio">Fecha requerida</label>
+    <input type="date" id="fechaEnvio">
+  </div>
+  <div class="input-field">
+    <label for="maniobra">Maniobra de descarga</label>
+    <select id="maniobra">
+      <option value="sin">Sin maniobra (Cliente descarga)</option>
+      <option value="con">Con maniobra (Provac descarga)</option>
+    </select>
+  </div>
+</div>
+
+<!-- DIRECCIÓN DE ORIGEN (REMITENTE) -->
+<div class="address-group-box">
+  <label class="group-title">📍 Ubicación de Origen (Remitente)</label>
+  <div class="input-row cols-2">
+    <div class="input-field">
+      <label for="calleOrigen">Calle y Número</label>
+      <input type="text" id="calleOrigen" placeholder="Ej: Av. Industrias 400">
+    </div>
+    <div class="input-field">
+      <label for="coloniaOrigen">Colonia / Municipio</label>
+      <input type="text" id="coloniaOrigen" placeholder="Ej: Apodaca, N.L.">
+    </div>
+  </div>
+</div>
+
+<!-- DIRECCIÓN DE DESTINO (RECEPCIÓN) -->
+<div class="address-group-box">
+  <label class="group-title">🎯 Ubicación de Destino (Entrega)</label>
+  <div class="input-row cols-2">
+    <div class="input-field">
+      <label for="calleDestino">Calle y Número</label>
+      <input type="text" id="calleDestino" placeholder="Ej: Av. Félix U. Gómez 1200">
+    </div>
+    <div class="input-field">
+      <label for="coloniaDestino">Colonia / Municipio</label>
+      <input type="text" id="coloniaDestino" placeholder="Ej: Monterrey, N.L.">
+    </div>
+  </div>
+</div>
+
+<!-- GPS DE UBICACIÓN ACTUAL -->
+<div class="gps-selector-container">
+  <label for="targetGps">Usar mi GPS para definir:</label>
+  <div class="gps-actions-row">
+    <select id="targetGps" class="select-small">
+      <option value="origen">📍 Punto de Origen</option>
+      <option value="destino" selected>🎯 Punto de Destino</option>
+    </select>
+    <button type="button" class="btn-gps-loc" id="btnGps">
+      <span class="icon">🛰️</span> Obtener GPS
+    </button>
+  </div>
+  <span id="gpsStatusText" class="gps-hint"></span>
+</div>
+
+<!-- DISTANCIA Y MAPA -->
+<div class="input-field">
+  <label for="distanciaKm">Distancia Total a Recorrer (Km)</label>
+  <input type="number" id="distanciaKm" placeholder="Ej: 18" min="1" step="0.1">
+</div>
+
+<!-- MAPA INTERACTIVO CON DOS PUNTOS -->
+<div class="input-field">
+  <label>Ruta estimada en el mapa (Arrastra los marcadores Origen/Destino):</label>
+  <div id="mapaFlete" style="height: 260px; width: 100%; border-radius: 8px; margin-bottom: 12px; z-index: 1;"></div>
+</div>
+
+
+
+
+
 
       <!-- RESUMEN PRECIO -->
       <div class="price-summary-card">

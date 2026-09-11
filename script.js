@@ -302,85 +302,187 @@ function setupCatalogSearch() {
  * Mapa interactivo
  */
 
-// Variables globales para el mapa
-let map = null;
-let markerBodega = null;
-let markerEntrega = null;
+/**
+ * Provac Express - Lógica de Calculadora con Origen/Destino y Mapa
+ */
 
-// Coordenadas de tu base / bodega (Apodaca / Monterrey)
-const BODEGA_COORDS = [25.7800, -100.1800];
+let map = null;
+let markerOrigen = null;
+let markerDestino = null;
+
+// Coordenadas por defecto (Bodega Apodaca y Centro Monterrey)
+let coordsOrigen = [25.7800, -100.1800];
+let coordsDestino = [25.6866, -100.3161];
 
 /**
- * Inicializa el mapa interactivo dentro del modal
+ * Inicialización de Eventos de la Calculadora
+ */
+function initCalculatorEvents() {
+  const inputs = [
+    'largo', 'ancho', 'alto', 'peso', 'cantidad', 
+    'distanciaKm', 'maniobra', 'fechaEnvio', 
+    'calleOrigen', 'coloniaOrigen', 'calleDestino', 'coloniaDestino'
+  ];
+  
+  inputs.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('input', calcularCotizacion);
+      el.addEventListener('change', calcularCotizacion);
+    }
+  });
+
+  const btnGps = document.getElementById('btnGps');
+  if (btnGps) btnGps.addEventListener('click', obtenerUbicacionGPS);
+
+  const btnWa = document.getElementById('btnWhatsapp');
+  if (btnWa) btnWa.addEventListener('click', enviarAWhatsApp);
+}
+
+/**
+ * Inicializa el Mapa Leaflet con 2 Marcadores (Origen y Destino)
  */
 function initMap() {
   const mapContainer = document.getElementById('mapaFlete');
-  if (!mapContainer || map !== null) return; // Evita reinicializar si ya existe
+  if (!mapContainer || map !== null) return;
 
-  // 1. Crear el mapa centrado en Monterrey
-  map = L.map('mapaFlete').setView(BODEGA_COORDS, 11);
+  map = L.map('mapaFlete').setView([25.7333, -100.2480], 11);
 
-  // 2. Cargar capas gratuitas de OpenStreetMap
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 18,
     attribution: '© OpenStreetMap'
   }).addTo(map);
 
-  // 3. Marcador Fijo: Bodega Provac Express
-  markerBodega = L.marker(BODEGA_COORDS).addTo(map)
-    .bindPopup('<b>Bodega Provac Express</b><br>Punto de Origen')
-    .openPopup();
-
-  // 4. Marcador Arrastrable: Punto de Entrega
-  const defaultEntrega = [25.6866, -100.3161]; // Centro de Monterrey
-  markerEntrega = L.marker(defaultEntrega, { draggable: true }).addTo(map)
-    .bindPopup('Arrastra o haz clic para marcar la entrega');
-
-  // Evento al arrastrar el pin de entrega
-  markerEntrega.on('dragend', function (e) {
-    const coords = e.target.getLatLng();
-    actualizarDistanciaDesdeMapa(coords.lat, coords.lng);
+  // Marcador Verde: Origen (Remitente)
+  const greenIcon = new L.Icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
   });
 
-  // Evento al hacer clic en cualquier parte del mapa
-  map.on('click', function (e) {
-    markerEntrega.setLatLng(e.latlng);
-    actualizarDistanciaDesdeMapa(e.latlng.lat, e.latlng.lng);
+  // Marcador Rojo: Destino (Entrega)
+  const redIcon = new L.Icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
   });
+
+  markerOrigen = L.marker(coordsOrigen, { draggable: true, icon: greenIcon }).addTo(map)
+    .bindPopup('<b>📍 Origen (Remitente)</b>');
+
+  markerDestino = L.marker(coordsDestino, { draggable: true, icon: redIcon }).addTo(map)
+    .bindPopup('<b>🎯 Destino (Entrega)</b>');
+
+  // Evento arrastrar Origen
+  markerOrigen.on('dragend', function (e) {
+    coordsOrigen = [e.target.getLatLng().lat, e.target.getLatLng().lng];
+    recalcularDistanciaMapa();
+  });
+
+  // Evento arrastrar Destino
+  markerDestino.on('dragend', function (e) {
+    coordsDestino = [e.target.getLatLng().lat, e.target.getLatLng().lng];
+    recalcularDistanciaMapa();
+  });
+
+  recalcularDistanciaMapa();
 }
 
 /**
- * Calcula la distancia desde la bodega al punto seleccionado y actualiza el input
+ * Calcula la distancia en línea vial estimada entre Origen y Destino
  */
-function actualizarDistanciaDesdeMapa(lat, lng) {
-  const R = 6371; // Radio de la Tierra en km
-  const dLat = (lat - BODEGA_COORDS[0]) * Math.PI / 180;
-  const dLng = (lng - BODEGA_COORDS[1]) * Math.PI / 180;
+function recalcularDistanciaMapa() {
+  const R = 6371; // Radio terrestre en Km
+  const dLat = (coordsDestino[0] - coordsOrigen[0]) * Math.PI / 180;
+  const dLng = (coordsDestino[1] - coordsOrigen[1]) * Math.PI / 180;
 
   const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(BODEGA_COORDS[0] * Math.PI / 180) * Math.cos(lat * Math.PI / 180) *
+            Math.cos(coordsOrigen[0] * Math.PI / 180) * Math.cos(coordsDestino[0] * Math.PI / 180) *
             Math.sin(dLng / 2) * Math.sin(dLng / 2);
 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const distanciaKm = (R * c * 1.3).toFixed(1); // Factor 1.3 para estimar ruta vial
+  const distanciaKm = (R * c * 1.3).toFixed(1); // Factor 1.3 estimado de vialidad
 
-  // Actualizar el campo de distancia y recalcular cotización
   const inputDist = document.getElementById('distanciaKm');
   if (inputDist) {
     inputDist.value = distanciaKm;
-    calcularCotizacion(); // Ejecuta el cálculo automático
+    calcularCotizacion();
   }
 }
 
-// Modificar la función toggleModal para renderizar el mapa correctamente al abrir
-const originalToggleModal = window.toggleModal;
-window.toggleModal = function(show) {
-  if (originalToggleModal) originalToggleModal(show);
-  
-  if (show) {
-    setTimeout(() => {
-      initMap();
-      if (map) map.invalidateSize(); // Corrige renderizado de tamaño dentro de modales
-    }, 300);
+/**
+ * Obtener GPS y asignar a Origen o Destino según selección
+ */
+function obtenerUbicacionGPS() {
+  const status = document.getElementById('gpsStatusText');
+  const target = document.getElementById('targetGps')?.value || 'destino';
+
+  if (!navigator.geolocation) {
+    if (status) status.textContent = 'La geolocalización no es compatible.';
+    return;
   }
-};
+
+  if (status) status.textContent = 'Obteniendo GPS...';
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+
+      if (target === 'origen') {
+        coordsOrigen = [lat, lng];
+        if (markerOrigen) markerOrigen.setLatLng(coordsOrigen);
+        if (status) status.textContent = '📍 Origen actualizado con tu GPS.';
+      } else {
+        coordsDestino = [lat, lng];
+        if (markerDestino) markerDestino.setLatLng(coordsDestino);
+        if (status) status.textContent = '🎯 Destino actualizado con tu GPS.';
+      }
+
+      if (map) map.setView([lat, lng], 12);
+      recalcularDistanciaMapa();
+    },
+    () => {
+      if (status) status.textContent = 'Error al obtener GPS. Ajusta manualmente.';
+    }
+  );
+}
+
+/**
+ * Enviar el detalle completo de ambas direcciones por WhatsApp
+ */
+function enviarAWhatsApp() {
+  const pesoUnit = document.getElementById('peso')?.value || 0;
+  const cantidad = document.getElementById('cantidad')?.value || 0;
+  const distanciaKm = document.getElementById('distanciaKm')?.value || 0;
+  const maniobra = document.getElementById('maniobra')?.value === 'con' ? 'Con maniobra' : 'Sin maniobra';
+  const fecha = document.getElementById('fechaEnvio')?.value || 'A acordar';
+  
+  const calleOrigen = document.getElementById('calleOrigen')?.value || 'No especificada';
+  const coloniaOrigen = document.getElementById('coloniaOrigen')?.value || 'No especificada';
+  
+  const calleDestino = document.getElementById('calleDestino')?.value || 'No especificada';
+  const coloniaDestino = document.getElementById('coloniaDestino')?.value || 'No especificada';
+  
+  const totalText = document.getElementById('precioTotal')?.innerText || '$0 MXN';
+  const pesoTotal = (parseFloat(pesoUnit) * parseInt(cantidad)).toFixed(1);
+
+  const mensaje = `¡Hola Provac Express! Solicitud de cotización de flete:%0A%0A` +
+    `📦 *Carga:* ${cantidad} cajas (${pesoTotal} kg totales)%0A` +
+    `📍 *Origen (Remitente):* ${calleOrigen}, ${coloniaOrigen}%0A` +
+    `🎯 *Destino (Entrega):* ${calleDestino}, ${coloniaDestino}%0A` +
+    `🗺️ *Distancia Estimada:* ${distanciaKm} km%0A` +
+    `🚚 *Servicio:* ${maniobra}%0A` +
+    `📅 *Fecha:* ${fecha}%0A` +
+    `💰 *Estimación:* ${totalText}%0A%0A` +
+    `¿Tienen disponibilidad de unidades para esta ruta?`;
+
+  const telefono = '528117616817';
+  window.open(`https://wa.me/${telefono}?text=${mensaje}`, '_blank');
+}
