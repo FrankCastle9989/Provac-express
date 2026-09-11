@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /**
  * Carga automáticamente calculadora.html si no está presente en el DOM
- */.
+ */
 async function preloadCalculatorModal() {
   if (!document.getElementById('modalBackdrop')) {
     try {
