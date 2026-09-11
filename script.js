@@ -140,3 +140,185 @@ function actualizarGauge(pesoTotal) {
   gaugeText.innerText = `${pesoTotal.toFixed(1)} kg / 650 kg`;
   gaugeFill.style.backgroundColor = pesoTotal > CONFIG.SAVEIRO_MAX_KG ? 'var(--danger)' : 'var(--success)';
 }
+
+// DATOS DEL CATÁLOGO INTERACTIVO
+const CATALOG_ITEMS = [
+  {
+    id: 1,
+    category: "seco",
+    categoryName: "Alimentos Secos",
+    title: "Granos y Semillas Empacadas",
+    desc: "Arroz, frijol, lenteja y cereales en presentación comercial para retail.",
+    icon: "🌾",
+    unit: "Caja / Tarima"
+  },
+  {
+    id: 2,
+    category: "seco",
+    categoryName: "Alimentos Secos",
+    title: "Snacks y Galletas",
+    desc: "Botanas, galletas y frituras en empaque primario y secundario.",
+    icon: "🍪",
+    unit: "Caja Máster"
+  },
+  {
+    id: 3,
+    category: "vacio",
+    categoryName: "Sellados al Vacío",
+    title: "Embutidos y Quesos Curados",
+    desc: "Carnes frías y quesos en empaque de thermoformado o al vacío.",
+    icon: "🧀",
+    unit: "Caja Térmica"
+  },
+  {
+    id: 4,
+    category: "vacio",
+    categoryName: "Sellados al Vacío",
+    title: "Proteínas Procesadas",
+    desc: "Cortes de carne congelada o empacada listos para anaquel.",
+    icon: "🥩",
+    unit: "Caja Sellada"
+  },
+  {
+    id: 5,
+    category: "latas",
+    categoryName: "Bebidas en Lata",
+    title: "Refrescos y Cervezas",
+    desc: "Aluminio en charolas retráctiles o cartón para tiendas de conveniencia.",
+    icon: "🥫",
+    unit: "Charola / 24 Pz"
+  },
+  {
+    id: 6,
+    category: "latas",
+    categoryName: "Bebidas en Lata",
+    title: "Jugos y Envasados",
+    desc: "Bebidas energizantes, tes y jugos en lata de aluminio.",
+    icon: "🥤",
+    unit: "Charola / 12 Pz"
+  },
+  {
+    id: 7,
+    category: "botellas",
+    categoryName: "Bebidas PET",
+    title: "Agua Purificada y Sabores",
+    desc: "Embotellados en PET de 500ml a 5L para canal de detalle.",
+    icon: "🍾",
+    unit: "Paquete / 12-24 Pz"
+  },
+  {
+    id: 8,
+    category: "polvo",
+    categoryName: "Productos en Polvo",
+    title: "Harinas e Ingredientes",
+    desc: "Harina de trigo, maíz, sazonadores y formulados alimenticios.",
+    icon: "📦",
+    unit: "Caja / Saco"
+  },
+  {
+    id: 9,
+    category: "polvo",
+    categoryName: "Productos en Polvo",
+    title: "Suplementos e Leches",
+    desc: "Fórmulas lácteas y suplementos nutricionales en bote o sobre.",
+    icon: "🥛",
+    unit: "Caja Comercial"
+  },
+  {
+    id: 10,
+    category: "costales",
+    categoryName: "Costales y Granel",
+    title: "Costalería Industrial",
+    desc: "Sacos de 25kg a 50kg de azúcar, sal, alimento balanceado y granos.",
+    icon: "🌾",
+    unit: "Saco 25kg-50kg"
+  },
+  {
+    id: 11,
+    category: "cosmeticos",
+    categoryName: "Cosméticos",
+    title: "Cuidado Personal y Belleza",
+    desc: "Shampoos, cremas, jabones y cosméticos en empaque final.",
+    icon: "🧴",
+    unit: "Caja Distribución"
+  },
+  {
+    id: 12,
+    category: "medicamentos",
+    categoryName: "Medicamentos (Sin Frío)",
+    title: "Fármacos OTC y Material Curación",
+    desc: "Tabletas, jarabes y gasas que requieren conservación a temperatura ambiente.",
+    icon: "💊",
+    unit: "Caja Controlada"
+  }
+];
+
+// INICIALIZACIÓN DEL CATÁLOGO Y FILTROS
+document.addEventListener("DOMContentLoaded", () => {
+  renderCatalog(CATALOG_ITEMS);
+
+  // Escuchadores de Filtros por Categoria
+  const filterBtns = document.querySelectorAll("#catalogFilters .filter-btn");
+  filterBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      filterBtns.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      
+      const category = btn.getAttribute("data-category");
+      filterAndRender();
+    });
+  });
+
+  // Escuchador de Búsqueda
+  const searchInput = document.getElementById("catalogSearch");
+  if (searchInput) {
+    searchInput.addEventListener("input", filterAndRender);
+  }
+});
+
+function filterAndRender() {
+  const activeBtn = document.querySelector("#catalogFilters .filter-btn.active");
+  const selectedCat = activeBtn ? activeBtn.getAttribute("data-category") : "todos";
+  const query = (document.getElementById("catalogSearch").value || "").toLowerCase().trim();
+
+  const filtered = CATALOG_ITEMS.filter(item => {
+    const matchesCat = (selectedCat === "todos") || (item.category === selectedCat);
+    const matchesQuery = item.title.toLowerCase().includes(query) ||
+                         item.desc.toLowerCase().includes(query) ||
+                         item.categoryName.toLowerCase().includes(query);
+    return matchesCat && matchesQuery;
+  });
+
+  renderCatalog(filtered);
+}
+
+function renderCatalog(items) {
+  const grid = document.getElementById("catalogGrid");
+  if (!grid) return;
+
+  if (items.length === 0) {
+    grid.innerHTML = `<div class="no-results">No se encontraron productos o categorías con el criterio especificado.</div>`;
+    return;
+  }
+
+  grid.innerHTML = items.map(item => `
+    <div class="catalog-card">
+      <div class="catalog-card-icon">${item.icon}</div>
+      <span class="catalog-card-tag">${item.categoryName}</span>
+      <h3>${item.title}</h3>
+      <p>${item.desc}</p>
+      <div class="catalog-card-footer">
+        <span class="spec-chip">${item.unit}</span>
+        <button class="btn-card-quote" onclick="cotizarProductoDirecto('${item.title}')">Cotizar Flete</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function cotizarProductoDirecto(nombreProducto) {
+  toggleModal(true);
+  const calleInput = document.getElementById('calle');
+  if (calleInput) {
+    calleInput.focus();
+  }
+}

@@ -1,113 +1,41 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Provac Express | Logística, Distribución y Fletes Mayoristas</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-
-  <!-- NAVIGATION BAR -->
-  <nav class="navbar" id="navbar">
-    <div class="nav-container">
-      <a href="#" class="brand-logo">
-        <div class="logo-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-        </div>
-        <span>PROVAC <strong>EXPRESS</strong></span>
-      </a>
-      
-      <div class="nav-links">
-        <a href="#servicios">Servicios</a>
-        <a href="#cobertura">Cobertura</a>
-        <a href="#flota">Flota</a>
-      </div>
-
-      <div class="nav-actions">
-        <button class="btn-glow" onclick="toggleModal(true)">
-          <span>⚡ Cotizar Flete</span>
-        </button>
-      </div>
-    </div>
-  </nav>
-
-  <!-- HERO SECTION -->
-  <header class="hero-section">
-    <div class="hero-bg-glow"></div>
-    <div class="hero-container">
-      <div class="hero-badge">
-        <span class="pulse-dot"></span> Cadena Fría y Logística 2026
-      </div>
-      <h1>Distribución Mayorista <br><span class="gradient-text">Especializada en Monterrey</span></h1>
-      <p>Infraestructura logística de alto rendimiento. Soluciones integrales de almacenaje, logística de frío y entrega de última milla para el canal de detalle.</p>
-      
-      <div class="hero-cta-group">
-        <button class="btn-primary" onclick="toggleModal(true)">
-          <span>📍 Cotizar Envío por GPS</span>
-        </button>
-        <a href="#servicios" class="btn-outline">Explorar Soluciones</a>
-      </div>
-
-      <!-- Live Metrics Dashboard Preview -->
-      <div class="metrics-grid">
-        <div class="metric-card">
-          <span class="metric-val">+99.2%</span>
-          <span class="metric-lbl">Entregas a Tiempo</span>
-        </div>
-        <div class="metric-card">
-          <span class="metric-val">650 kg</span>
-          <span class="metric-lbl">Capacidad por Unidad Saveiro</span>
-        </div>
-        <div class="metric-card">
-          <span class="metric-val">&lt; 15 min</span>
-          <span class="metric-lbl">Tiempo de Respuesta</span>
-        </div>
-      </div>
-    </div>
-  </header>
-
-  <!-- SERVICIOS / COMPARATIVA LOGYCOM & PARVADA -->
-  <section class="services-section" id="servicios">
+<!-- CATALOGO INTERACTIVO DE PRODUCTOS Y SECTORES -->
+  <section class="catalog-section" id="catalogo">
     <div class="section-header">
-      <h2>Soluciones Logísticas Integrales</h2>
-      <p>Diseñadas para optimizar tus tiempos de entrega y garantizar la frescura del producto.</p>
+      <span class="badge-mini">Portafolio de Distribución</span>
+      <h2>Catálogo de Categorías y Productos</h2>
+      <p>Logística y entrega especializada para sectores comerciales e industriales.</p>
     </div>
 
-    <div class="services-grid">
-      <div class="service-card">
-        <div class="service-icon">🚚</div>
-        <h3>Fletes y Distribución Local</h3>
-        <p>Rutas optimizadas en la Zona Metropolitana de Monterrey para entrega en tiendas y centros de abasto.</p>
-        <ul class="service-list">
-          <li>✔ Unidades Volkswagen Saveiro</li>
-          <li>✔ Seguimiento satelital en tiempo real</li>
-        </ul>
-      </div>
+    <!-- Filtros de Categorías -->
+    <div class="catalog-filters" id="catalogFilters">
+      <button class="filter-btn active" data-category="todos">Todos</button>
+      <button class="filter-btn" data-category="seco">Alimentos Secos</button>
+      <button class="filter-btn" data-category="vacio">Sellados al Vacío</button>
+      <button class="filter-btn" data-category="latas">Bebidas en Lata</button>
+      <button class="filter-btn" data-category="botellas">Bebidas PET</button>
+      <button class="filter-btn" data-category="polvo">Productos en Polvo</button>
+      <button class="filter-btn" data-category="costales">Costales y Granel</button>
+      <button class="filter-btn" data-category="cosmeticos">Cosméticos</button>
+      <button class="filter-btn" data-category="medicamentos">Medicamentos</button>
+    </div>
 
-      <div class="service-card featured">
-        <div class="service-tag">Más Solicitado</div>
-        <div class="service-icon">❄️</div>
-        <h3>Cadena Fría y Almacenaje</h3>
-        <p>Control riguroso de temperatura para conservación de carnes frías, lácteos y perecederos.</p>
-        <ul class="service-list">
-          <li>✔ Monitoreo térmico continuo</li>
-          <li>✔ Descarga y maniobra profesional</li>
-        </ul>
+    <!-- Buscador Integrado -->
+    <div class="catalog-search-bar">
+      <div class="search-input-wrapper">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="catalogSearch" placeholder="Buscar categoría o producto comercial...">
       </div>
+    </div>
 
-      <div class="service-card">
-        <div class="service-icon">📊</div>
-        <h3>Gestión de Ruta y Canal Detalle</h3>
-        <p>Estrategias avanzadas de cobro, entrega y administración de inventario en punto de venta.</p>
-        <ul class="service-list">
-          <li>✔ Cobertura multirruta</li>
-          <li>✔ Indicadores de efectividad</li>
-        </ul>
-      </div>
+    <!-- Nota Informativa Medicamentos -->
+    <div class="notice-banner info">
+      <span class="notice-icon">ℹ️</span>
+      <p><strong>Aviso Operativo:</strong> La distribución y flete de <strong>Medicamentos y Muestras Médicas</strong> en esta línea de servicio aplica exclusivamente para productos que <u>NO requieran cadena de frío o temperatura controlada</u> (almacenamiento y transporte a temperatura ambiente).</p>
+    </div>
+
+    <!-- Grid Dinámico de Tarjetas de Productos -->
+    <div class="catalog-grid" id="catalogGrid">
+      <!-- Generado dinámicamente con JavaScript -->
     </div>
   </section>
 
