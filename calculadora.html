@@ -1,0 +1,109 @@
+<!-- MODAL / CALCULADORA RESPONSIVA STANDALONE -->
+<div class="modal-backdrop active" id="modalBackdrop">
+  <div class="modal-window">
+    <button class="modal-close-btn" onclick="toggleModal(false)">&times;</button>
+    
+    <div class="modal-title-group">
+      <span class="badge-mini">Cotizador Inteligente</span>
+      <h2>Calculadora de Fletes Express</h2>
+      <p>Estima el costo exacto según volumen, peso y distancia real.</p>
+    </div>
+
+    <form id="calcForm" onsubmit="return false;">
+      <div class="form-step">
+        <span class="step-num">01</span>
+        <h4>Especificaciones del Empaque</h4>
+      </div>
+
+      <div class="input-row cols-3">
+        <div class="input-field">
+          <label for="largo">Largo (cm)</label>
+          <input type="number" id="largo" placeholder="Ej: 40" min="1">
+        </div>
+        <div class="input-field">
+          <label for="ancho">Ancho (cm)</label>
+          <input type="number" id="ancho" placeholder="Ej: 30" min="1">
+        </div>
+        <div class="input-field">
+          <label for="alto">Alto (cm)</label>
+          <input type="number" id="alto" placeholder="Ej: 25" min="1">
+        </div>
+      </div>
+
+      <div class="input-row cols-2">
+        <div class="input-field">
+          <label for="peso">Peso C/U (kg)</label>
+          <input type="number" id="peso" step="0.1" placeholder="Ej: 12" min="0.1">
+        </div>
+        <div class="input-field">
+          <label for="cantidad">Cajas Totales</label>
+          <input type="number" id="cantidad" placeholder="Ej: 25" min="1">
+        </div>
+      </div>
+
+      <!-- Indicador de Ocupación -->
+      <div class="load-gauge">
+        <div class="gauge-labels">
+          <span>Ocupación de la Unidad (Saveiro)</span>
+          <strong id="gaugeText">0 kg / 650 kg</strong>
+        </div>
+        <div class="gauge-bar">
+          <div id="gaugeFill" class="gauge-fill"></div>
+        </div>
+      </div>
+
+      <div id="alertNotice" class="alert-banner"></div>
+
+      <div class="form-step">
+        <span class="step-num">02</span>
+        <h4>Programación y Ubicación</h4>
+      </div>
+
+      <div class="input-row cols-2">
+        <div class="input-field">
+          <label for="fechaEnvio">Fecha requerida</label>
+          <input type="date" id="fechaEnvio">
+        </div>
+        <div class="input-field">
+          <label for="maniobra">Maniobra de descarga</label>
+          <select id="maniobra">
+            <option value="sin">Sin maniobra (Cliente descarga)</option>
+            <option value="con">Con maniobra (Provac descarga)</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="button" class="btn-gps-loc" id="btnGps" data-action="gps">
+        <span class="icon">📍</span> Usar mi ubicación para calcular km
+      </button>
+      <span id="gpsStatusText" class="gps-hint"></span>
+
+      <div class="input-field">
+        <label for="distanciaKm">Distancia en Km (desde Bodega)</label>
+        <input type="number" id="distanciaKm" placeholder="Ej: 14" min="1" step="0.1">
+      </div>
+
+      <div class="input-row cols-2">
+        <div class="input-field">
+          <label for="calle">Calle y Número</label>
+          <input type="text" id="calle" placeholder="Av. Félix U. Gómez 1200">
+        </div>
+        <div class="input-field">
+          <label for="colonia">Colonia / Municipio</label>
+          <input type="text" id="colonia" placeholder="Monterrey, N.L.">
+        </div>
+      </div>
+
+      <!-- RESUMEN PRECIO -->
+      <div class="price-summary-card">
+        <span class="price-label">Estimación Total</span>
+        <div class="price-value" id="precioTotal">$0 <small>MXN</small></div>
+        <p id="desgloseText" class="price-sub">Ingresa las especificaciones</p>
+      </div>
+
+      <button type="button" id="btnWhatsapp" class="btn-submit-wa" disabled>
+        Solicitar Unidades por WhatsApp
+      </button>
+    </form>
+  </div>
+</div>
