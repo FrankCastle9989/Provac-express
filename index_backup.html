@@ -232,74 +232,25 @@
           </div>
         </div>
 
-        <!-- DIRECCIÓN DE RECOLECCIÓN (ORIGEN) -->
-        <div class="address-section">
-          <h5 style="margin: 15px 0 10px 0; color: var(--text-color, #1e293b); font-size: 0.95rem;">📍 Dirección de Recolección (Origen)</h5>
-          
-          <button type="button" class="btn-gps-loc" onclick="obtenerUbicacionOrigen()">
-            <span class="icon">📍</span> Usar mi ubicación actual como origen
-          </button>
-          <span id="gpsOrigenStatusText" class="gps-hint"></span>
+        <button type="button" class="btn-gps-loc" onclick="obtenerUbicacionGPS()">
+          <span class="icon">📍</span> Usar mi ubicación para calcular km
+        </button>
+        <span id="gpsStatusText" class="gps-hint"></span>
 
-          <div class="input-row cols-2">
-            <div class="input-field">
-              <label for="origenCalle">Calle</label>
-              <input type="text" id="origenCalle" placeholder="Ej: Av. Constitución">
-            </div>
-            <div class="input-field">
-              <label for="origenNumero">Número Ext/Int</label>
-              <input type="text" id="origenNumero" placeholder="Ej: 1200 Ext">
-            </div>
-          </div>
-
-          <div class="input-row cols-2">
-            <div class="input-field">
-              <label for="origenColonia">Colonia / Municipio</label>
-              <input type="text" id="origenColonia" placeholder="Ej: Centro, Monterrey">
-            </div>
-            <div class="input-field">
-              <label for="origenCP">Código Postal</label>
-              <input type="text" id="origenCP" placeholder="Ej: 64000" maxlength="5">
-            </div>
-          </div>
+        <div class="input-field">
+          <label for="distanciaKm">Distancia en Km (desde Bodega)</label>
+          <input type="number" id="distanciaKm" placeholder="Ej: 14" min="1" step="0.1">
         </div>
 
-        <!-- DIRECCIÓN DE ENTREGA (DESTINO FINAL) -->
-        <div class="address-section" style="margin-top: 15px;">
-          <h5 style="margin: 15px 0 10px 0; color: var(--text-color, #1e293b); font-size: 0.95rem;">🏁 Dirección de Entrega (Destino Final)</h5>
-          
-          <button type="button" class="btn-gps-loc" onclick="obtenerUbicacionDestino()">
-            <span class="icon">📍</span> Usar mi ubicación actual como destino
-          </button>
-          <span id="gpsDestinoStatusText" class="gps-hint"></span>
-
-          <div class="input-row cols-2">
-            <div class="input-field">
-              <label for="destinoCalle">Calle</label>
-              <input type="text" id="destinoCalle" placeholder="Ej: Av. Félix U. Gómez">
-            </div>
-            <div class="input-field">
-              <label for="destinoNumero">Número Ext/Int</label>
-              <input type="text" id="destinoNumero" placeholder="Ej: 4500">
-            </div>
+        <div class="input-row cols-2">
+          <div class="input-field">
+            <label for="calle">Calle y Número</label>
+            <input type="text" id="calle" placeholder="Av. Félix U. Gómez 1200">
           </div>
-
-          <div class="input-row cols-2">
-            <div class="input-field">
-              <label for="destinoColonia">Colonia / Municipio</label>
-              <input type="text" id="destinoColonia" placeholder="Ej: Industrial, Monterrey">
-            </div>
-            <div class="input-field">
-              <label for="destinoCP">Código Postal</label>
-              <input type="text" id="destinoCP" placeholder="Ej: 64440" maxlength="5">
-            </div>
+          <div class="input-field">
+            <label for="colonia">Colonia / Municipio</label>
+            <input type="text" id="colonia" placeholder="Monterrey, N.L.">
           </div>
-        </div>
-
-        <!-- DISTANCIA EN KM CALCULADA / MANUAL -->
-        <div class="input-field" style="margin-top: 15px;">
-          <label for="distanciaKm">Distancia Estimada (Km)</label>
-          <input type="number" id="distanciaKm" placeholder="Se calcula con la dirección o ingresa manualmente" min="1" step="0.1">
         </div>
 
         <!-- RESUMEN PRECIO -->

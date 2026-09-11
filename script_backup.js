@@ -149,12 +149,6 @@ document.addEventListener("DOMContentLoaded", () => {
     searchInput.addEventListener("input", filterAndRender);
   }
 
-  // Escuchador para actualizar las recomendaciones de empaque al cambiar el producto seleccionado
-  const tipoProductoSelect = document.getElementById('tipoProducto');
-  if (tipoProductoSelect) {
-    tipoProductoSelect.addEventListener('change', actualizarSugerenciaEmpaque);
-  }
-
   // Escuchadores dinámicos del formulario
   document.querySelectorAll('#calcForm input, #calcForm select').forEach(element => {
     element.addEventListener('input', ejecutarCalculo);
@@ -223,62 +217,8 @@ function renderCatalog(items) {
 
 function cotizarProductoDirecto(nombreProducto) {
   toggleModal(true);
-  
-  // Seleccionar automáticamente el producto si existe en el select
-  const selectProducto = document.getElementById('tipoProducto');
-  if (selectProducto) {
-    for (let option of selectProducto.options) {
-      if (option.text.toLowerCase().includes(nombreProducto.toLowerCase()) || 
-          nombreProducto.toLowerCase().includes(option.text.toLowerCase())) {
-        selectProducto.value = option.value;
-        break;
-      }
-    }
-    actualizarSugerenciaEmpaque();
-  }
-
   const calleInput = document.getElementById('calle');
   if (calleInput) calleInput.focus();
-}
-
-// LÓGICA DE RECOMENDACIÓN DE EMPAQUE Y MANEJO
-function actualizarSugerenciaEmpaque() {
-  const tipoProducto = document.getElementById('tipoProducto')?.value;
-  const empaqueText = document.getElementById('empaqueText');
-  const empaqueBox = document.getElementById('empaqueBox');
-
-  if (!tipoProducto || !empaqueText) return;
-
-  let recomendacion = "";
-
-  switch (tipoProducto) {
-    case "seco":
-      recomendacion = "📦 <strong>Recomendación:</strong> Embalar en cajas de cartón corrugado estandarizadas y selladas con cinta reforzada. Utilizar tarimas estibadas adecuadamente.";
-      break;
-    case "vacio":
-      recomendacion = "🧊 <strong>Recomendación:</strong> Requiere cajas térmicas aislantes o empaque termoformado con refrigerantes (hielos gélidos) para mantener la cadena de frío corta.";
-      break;
-    case "latas":
-      recomendacion = "🥫 <strong>Recomendación:</strong> Empacar en charolas con película termoencogible (plastic shrink) o cajas máster para evitar abolladuras en el transporte.";
-      break;
-    case "botellas":
-      recomendacion = "🍾 <strong>Recomendación:</strong> Utilizar empaques plásticos retráctiles con separadores o cajas con divisiones para prevenir colisiones e impactos.";
-      break;
-    case "polvo":
-      recomendacion = "🌾 <strong>Recomendación:</strong> Usar sacos herméticos o cajas liner para evitar filtraciones y proteger contra la humedad durante la maniobra.";
-      break;
-    case "cosmeticos":
-      recomendacion = "🧴 <strong>Recomendación:</strong> Proteger recipientes con plástico de burbuja dentro de cajas máster rígidas para evitar derrames o roturas.";
-      break;
-    case "medicamentos":
-      recomendacion = "💊 <strong>Recomendación:</strong> Manejar en cajas de seguridad o contenedores sellados que protejan contra la luz directa y la humedad constante.";
-      break;
-    default:
-      recomendacion = "ℹ️ Selecciona un tipo de producto para ver las recomendaciones de empaque sugeridas.";
-  }
-
-  empaqueText.innerHTML = recomendacion;
-  if (empaqueBox) empaqueBox.style.display = 'block';
 }
 
 // GEOLOCALIZACIÓN GPS Y DISTANCIA
@@ -370,10 +310,8 @@ function ejecutarCalculo() {
     const calle = document.getElementById('calle').value || 'No especificada';
     const colonia = document.getElementById('colonia').value || 'Monterrey';
     const fecha = document.getElementById('fechaEnvio').value;
-    const selectProducto = document.getElementById('tipoProducto');
-    const productoNombre = selectProducto ? selectProducto.options[selectProducto.selectedIndex]?.text : 'General';
 
-    const mensaje = `Hola Provac Express, solicito flete:%0A- *Producto:* ${productoNombre}%0A- *Carga:* ${cantidad} cajas (${pesoTotal} kg)%0A- *Fecha:* ${fecha}%0A- *Destino:* ${calle}, ${colonia}%0A- *Distancia:* ${distanciaKm} km%0A- *Cotización:* $${tarifaTotal} MXN`;
+    const mensaje = `Hola Provac Express, solicito flete:%0A- *Carga:* ${cantidad} cajas (${pesoTotal} kg)%0A- *Fecha:* ${fecha}%0A- *Destino:* ${calle}, ${colonia}%0A- *Distancia:* ${distanciaKm} km%0A- *Cotización:* $${tarifaTotal} MXN`;
     window.open(`https://wa.me/${CONFIG.WHATSAPP_PHONE}?text=${mensaje}`, '_blank');
   };
 }
