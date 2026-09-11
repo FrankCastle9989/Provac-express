@@ -1,4 +1,122 @@
-<!-- CATALOGO INTERACTIVO DE PRODUCTOS Y SECTORES -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Provac Express | Logística, Distribución y Fletes Mayoristas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- BARRA DE NAVEGACIÓN -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="#" class="brand-logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M1 3h15v13H1z"/>
+            <path d="M16 8h4l3 3v5h-7V8z"/>
+            <circle cx="5.5" cy="18.5" r="2.5"/>
+            <circle cx="18.5" cy="18.5" r="2.5"/>
+          </svg>
+        </div>
+        <span>PROVAC <strong>EXPRESS</strong></span>
+      </a>
+      
+      <div class="nav-links">
+        <a href="#servicios">Servicios</a>
+        <a href="#catalogo">Catálogo</a>
+        <a href="#contacto">Contacto</a>
+      </div>
+
+      <div class="nav-actions">
+        <button class="btn-glow" onclick="toggleModal(true)">
+          <span>⚡ Cotizar Flete</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO SECTION -->
+  <header class="hero-section">
+    <div class="hero-bg-glow"></div>
+    <div class="hero-container">
+      <div class="hero-badge">
+        <span class="pulse-dot"></span> Cadena Fría y Logística 2026
+      </div>
+      <h1>Distribución Mayorista <br><span class="gradient-text">Especializada en Monterrey</span></h1>
+      <p>Infraestructura logística de alto rendimiento. Soluciones integrales de almacenaje, logística de frío y entrega de última milla para el canal de detalle.</p>
+      
+      <div class="hero-cta-group">
+        <button class="btn-primary" onclick="toggleModal(true)">
+          <span>📍 Cotizar Envío por GPS</span>
+        </button>
+        <a href="#catalogo" class="btn-outline">Ver Catálogo</a>
+      </div>
+
+      <!-- Métricas / Dashboard Preview -->
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <span class="metric-val">+99.2%</span>
+          <span class="metric-lbl">Entregas a Tiempo</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-val">650 kg</span>
+          <span class="metric-lbl">Capacidad por Unidad Saveiro</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-val">&lt; 15 min</span>
+          <span class="metric-lbl">Tiempo de Respuesta</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- SERVICIOS -->
+  <section class="services-section" id="servicios">
+    <div class="section-header">
+      <h2>Soluciones Logísticas Integrales</h2>
+      <p>Diseñadas para optimizar tus tiempos de entrega y garantizar la frescura del producto.</p>
+    </div>
+
+    <div class="services-grid">
+      <div class="service-card">
+        <div class="service-icon">🚚</div>
+        <h3>Fletes y Distribución Local</h3>
+        <p>Rutas optimizadas en la Zona Metropolitana de Monterrey para entrega en tiendas y centros de abasto.</p>
+        <ul class="service-list">
+          <li>✔ Unidades Volkswagen Saveiro</li>
+          <li>✔ Seguimiento satelital en tiempo real</li>
+        </ul>
+      </div>
+
+      <div class="service-card featured">
+        <div class="service-tag">Más Solicitado</div>
+        <div class="service-icon">❄️</div>
+        <h3>Cadena Fría y Almacenaje</h3>
+        <p>Control riguroso de temperatura para conservación de carnes frías, lácteos y perecederos.</p>
+        <ul class="service-list">
+          <li>✔ Monitoreo térmico continuo</li>
+          <li>✔ Descarga y maniobra profesional</li>
+        </ul>
+      </div>
+
+      <div class="service-card">
+        <div class="service-icon">📊</div>
+        <h3>Gestión de Ruta y Canal Detalle</h3>
+        <p>Estrategias avanzadas de cobro, entrega y administración de inventario en punto de venta.</p>
+        <ul class="service-list">
+          <li>✔ Cobertura multirruta</li>
+          <li>✔ Indicadores de efectividad</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- CATÁLOGO INTERACTIVO -->
   <section class="catalog-section" id="catalogo">
     <div class="section-header">
       <span class="badge-mini">Portafolio de Distribución</span>
@@ -35,11 +153,11 @@
 
     <!-- Grid Dinámico de Tarjetas de Productos -->
     <div class="catalog-grid" id="catalogGrid">
-      <!-- Generado dinámicamente con JavaScript -->
+      <!-- Se genera automáticamente con script.js -->
     </div>
   </section>
 
-  <!-- MODAL POP-UP CALCULADORA RESPONSIVA -->
+  <!-- MODAL / CALCULADORA RESPONSIVA -->
   <div class="modal-backdrop" id="modalBackdrop">
     <div class="modal-window">
       <button class="modal-close-btn" onclick="toggleModal(false)">&times;</button>
@@ -82,10 +200,10 @@
           </div>
         </div>
 
-        <!-- Visualizador de Carga -->
+        <!-- Indicador de Ocupación -->
         <div class="load-gauge">
           <div class="gauge-labels">
-            <span>Ocupación de la Unidad</span>
+            <span>Ocupación de la Unidad (Saveiro)</span>
             <strong id="gaugeText">0 kg / 650 kg</strong>
           </div>
           <div class="gauge-bar">
@@ -150,7 +268,7 @@
   </div>
 
   <!-- FOOTER -->
-  <footer class="main-footer">
+  <footer class="main-footer" id="contacto">
     <div class="footer-container">
       <div class="footer-col brand">
         <div class="brand-logo">
@@ -162,9 +280,9 @@
       <div class="footer-col">
         <h4>Servicios</h4>
         <ul>
-          <li><a href="#">Fletes Locales</a></li>
-          <li><a href="#">Cadena de Frío</a></li>
-          <li><a href="#">Almacenaje</a></li>
+          <li><a href="#servicios">Fletes Locales</a></li>
+          <li><a href="#servicios">Cadena de Frío</a></li>
+          <li><a href="#catalogo">Catálogo de Cargas</a></li>
         </ul>
       </div>
 

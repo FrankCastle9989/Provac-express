@@ -1,4 +1,4 @@
-// Configuración de Parámetros de Operación
+// CONFIGURACIÓN OPERATIVA DE PROVAC EXPRESS
 const CONFIG = {
   WHATSAPP_PHONE: "528117616817",
   SAVEIRO_MAX_KG: 650,
@@ -8,140 +8,7 @@ const CONFIG = {
   COSTO_MANIOBRA_UNIDAD: 3.5
 };
 
-// Control de Ventana Modal
-function toggleModal(show) {
-  const backdrop = document.getElementById('modalBackdrop');
-  if (show) {
-    backdrop.classList.add('active');
-    document.body.style.overflow = 'hidden';
-  } else {
-    backdrop.classList.remove('active');
-    document.body.style.overflow = '';
-  }
-}
-
-document.getElementById('modalBackdrop').addEventListener('click', (e) => {
-  if (e.target.id === 'modalBackdrop') toggleModal(false);
-});
-
-// Autoselección de fecha mínima
-const fechaInput = document.getElementById('fechaEnvio');
-const hoy = new Date().toISOString().split('T')[0];
-fechaInput.min = hoy;
-fechaInput.value = hoy;
-
-// Escuchadores de cambio en tiempo real
-document.querySelectorAll('#calcForm input, #calcForm select').forEach(element => {
-  element.addEventListener('input', ejecutarCalculo);
-});
-
-// Geolocalización GPS en Tiempo Real
-function obtenerUbicacionGPS() {
-  const statusTxt = document.getElementById('gpsStatusText');
-
-  if (!navigator.geolocation) {
-    statusTxt.innerText = "Navegador no soporta geolocalización GPS.";
-    return;
-  }
-
-  statusTxt.innerText = "Obteniendo coordenadas GPS...";
-
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      const distDirecta = haversineDistance(
-        pos.coords.latitude, pos.coords.longitude,
-        CONFIG.BODEGA_COORDS.lat, CONFIG.BODEGA_COORDS.lon
-      );
-      // Factor de ajuste para red vial urbana (+30%)
-      const distVial = Math.round((distDirecta * 1.3) * 10) / 10;
-
-      document.getElementById('distanciaKm').value = distVial;
-      statusTxt.innerText = `Distancia calculada: ~${distVial} km desde bodega`;
-      ejecutarCalculo();
-    },
-    () => { statusTxt.innerText = "Permiso denegado o GPS no disponible."; },
-    { enableHighAccuracy: true, timeout: 8000 }
-  );
-}
-
-function haversineDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371;
-  const dLat = (lat2 - lat1) * (Math.PI / 180);
-  const dLon = (lon2 - lon1) * (Math.PI / 180);
-  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLon / 2) ** 2;
-  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
-}
-
-// Algoritmo de Cálculo Dinámico
-function ejecutarCalculo() {
-  const pesoUnitario = parseFloat(document.getElementById('peso').value) || 0;
-  const cantidad = parseInt(document.getElementById('cantidad').value) || 0;
-  const distanciaKm = parseFloat(document.getElementById('distanciaKm').value) || 0;
-  const requiereManiobra = document.getElementById('maniobra').value === 'con';
-
-  const alertNotice = document.getElementById('alertNotice');
-  const precioTotalEl = document.getElementById('precioTotal');
-  const desgloseText = document.getElementById('desgloseText');
-  const btnWhatsapp = document.getElementById('btnWhatsapp');
-
-  alertNotice.style.display = 'none';
-  btnWhatsapp.disabled = true;
-
-  if (cantidad === 0 || pesoUnitario === 0) {
-    actualizarGauge(0);
-    precioTotalEl.innerHTML = "$0 <small>MXN</small>";
-    return;
-  }
-
-  const pesoTotal = pesoUnitario * cantidad;
-  actualizarGauge(pesoTotal);
-
-  if (pesoTotal > CONFIG.SAVEIRO_MAX_KG) {
-    alertNotice.innerText = `El peso total (${pesoTotal.toFixed(1)} kg) supera el límite de 1 Saveiro (650 kg).`;
-    alertNotice.style.display = 'block';
-    precioTotalEl.innerText = "Exceso de Carga";
-    desgloseText.innerText = "Ajusta la cantidad o contacta para unidad grande";
-    return;
-  }
-
-  if (distanciaKm <= 0) {
-    precioTotalEl.innerHTML = "$0 <small>MXN</small>";
-    desgloseText.innerText = "Ingresa la distancia en km o activa GPS";
-    return;
-  }
-
-  // Reglas de Cobro Operativo
-  let factorSobrecarga = pesoTotal > 400 ? 1.15 : 1.0;
-  let costoDistancia = distanciaKm * CONFIG.COSTO_PER_KM;
-  let costoManiobra = requiereManiobra ? (cantidad * CONFIG.COSTO_MANIOBRA_UNIDAD) : 0;
-
-  let tarifaTotal = Math.round(((CONFIG.TARIFA_BASE + costoDistancia) * factorSobrecarga) + costoManiobra);
-
-  precioTotalEl.innerHTML = `$${tarifaTotal.toLocaleString()} <small>MXN</small>`;
-  desgloseText.innerText = `${distanciaKm} km | ${cantidad} cajas (${pesoTotal} kg) ${requiereManiobra ? '| C/ Maniobra' : ''}`;
-  btnWhatsapp.disabled = false;
-
-  btnWhatsapp.onclick = () => {
-    const calle = document.getElementById('calle').value || 'No especificada';
-    const colonia = document.getElementById('colonia').value || 'Monterrey';
-    const fecha = document.getElementById('fechaEnvio').value;
-
-    const mensaje = `Hola Provac Express, solicito flete:%0A- *Carga:* ${cantidad} cajas (${pesoTotal} kg)%0A- *Fecha:* ${fecha}%0A- *Destino:* ${calle}, ${colonia}%0A- *Distancia:* ${distanciaKm} km%0A- *Cotización:* $${tarifaTotal} MXN`;
-    window.open(`https://wa.me/${CONFIG.WHATSAPP_PHONE}?text=${mensaje}`, '_blank');
-  };
-}
-
-function actualizarGauge(pesoTotal) {
-  const gaugeFill = document.getElementById('gaugeFill');
-  const gaugeText = document.getElementById('gaugeText');
-  const pct = Math.min((pesoTotal / CONFIG.SAVEIRO_MAX_KG) * 100, 100);
-
-  gaugeFill.style.width = `${pct}%`;
-  gaugeText.innerText = `${pesoTotal.toFixed(1)} kg / 650 kg`;
-  gaugeFill.style.backgroundColor = pesoTotal > CONFIG.SAVEIRO_MAX_KG ? 'var(--danger)' : 'var(--success)';
-}
-
-// DATOS DEL CATÁLOGO INTERACTIVO
+// DATOS DEL CATÁLOGO INTERACTIVO DE PRODUCTOS
 const CATALOG_ITEMS = [
   {
     id: 1,
@@ -193,7 +60,7 @@ const CATALOG_ITEMS = [
     category: "latas",
     categoryName: "Bebidas en Lata",
     title: "Jugos y Envasados",
-    desc: "Bebidas energizantes, tes y jugos en lata de aluminio.",
+    desc: "Bebidas energizantes, tés y jugos en lata de aluminio.",
     icon: "🥤",
     unit: "Charola / 12 Pz"
   },
@@ -219,7 +86,7 @@ const CATALOG_ITEMS = [
     id: 9,
     category: "polvo",
     categoryName: "Productos en Polvo",
-    title: "Suplementos e Leches",
+    title: "Suplementos y Leches",
     desc: "Fórmulas lácteas y suplementos nutricionales en bote o sobre.",
     icon: "🥛",
     unit: "Caja Comercial"
@@ -253,29 +120,62 @@ const CATALOG_ITEMS = [
   }
 ];
 
-// INICIALIZACIÓN DEL CATÁLOGO Y FILTROS
+// INICIALIZACIÓN DE LA APLICACIÓN
 document.addEventListener("DOMContentLoaded", () => {
+  // Configurar fecha mínima de envío
+  const fechaInput = document.getElementById('fechaEnvio');
+  if (fechaInput) {
+    const hoy = new Date().toISOString().split('T')[0];
+    fechaInput.min = hoy;
+    fechaInput.value = hoy;
+  }
+
+  // Cargar tarjetas del catálogo
   renderCatalog(CATALOG_ITEMS);
 
-  // Escuchadores de Filtros por Categoria
+  // Escuchadores del filtro de categorías
   const filterBtns = document.querySelectorAll("#catalogFilters .filter-btn");
   filterBtns.forEach(btn => {
     btn.addEventListener("click", () => {
       filterBtns.forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
-      
-      const category = btn.getAttribute("data-category");
       filterAndRender();
     });
   });
 
-  // Escuchador de Búsqueda
+  // Escuchador de búsqueda en el catálogo
   const searchInput = document.getElementById("catalogSearch");
   if (searchInput) {
     searchInput.addEventListener("input", filterAndRender);
   }
+
+  // Escuchadores dinámicos del formulario
+  document.querySelectorAll('#calcForm input, #calcForm select').forEach(element => {
+    element.addEventListener('input', ejecutarCalculo);
+  });
+
+  // Cerrar modal haciendo clic en el fondo
+  const backdrop = document.getElementById('modalBackdrop');
+  if (backdrop) {
+    backdrop.addEventListener('click', (e) => {
+      if (e.target.id === 'modalBackdrop') toggleModal(false);
+    });
+  }
 });
 
+// CONTROL DE MODAL
+function toggleModal(show) {
+  const backdrop = document.getElementById('modalBackdrop');
+  if (show) {
+    backdrop.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  } else {
+    backdrop.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+}
+
+// LÓGICA DE FILTRADO Y RENDER DEL CATÁLOGO
 function filterAndRender() {
   const activeBtn = document.querySelector("#catalogFilters .filter-btn.active");
   const selectedCat = activeBtn ? activeBtn.getAttribute("data-category") : "todos";
@@ -318,7 +218,112 @@ function renderCatalog(items) {
 function cotizarProductoDirecto(nombreProducto) {
   toggleModal(true);
   const calleInput = document.getElementById('calle');
-  if (calleInput) {
-    calleInput.focus();
+  if (calleInput) calleInput.focus();
+}
+
+// GEOLOCALIZACIÓN GPS Y DISTANCIA
+function obtenerUbicacionGPS() {
+  const statusTxt = document.getElementById('gpsStatusText');
+
+  if (!navigator.geolocation) {
+    statusTxt.innerText = "Navegador no soporta geolocalización GPS.";
+    return;
+  }
+
+  statusTxt.innerText = "Obteniendo coordenadas GPS...";
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const distDirecta = haversineDistance(
+        pos.coords.latitude, pos.coords.longitude,
+        CONFIG.BODEGA_COORDS.lat, CONFIG.BODEGA_COORDS.lon
+      );
+      // Ajuste de red vial (+30%)
+      const distVial = Math.round((distDirecta * 1.3) * 10) / 10;
+
+      document.getElementById('distanciaKm').value = distVial;
+      statusTxt.innerText = `Distancia estimada: ~${distVial} km desde bodega`;
+      ejecutarCalculo();
+    },
+    () => { statusTxt.innerText = "Permiso denegado o GPS no disponible."; },
+    { enableHighAccuracy: true, timeout: 8000 }
+  );
+}
+
+function haversineDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLon / 2) ** 2;
+  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+}
+
+// ALGORITMO DE CÁLCULO DE COTIZACIÓN
+function ejecutarCalculo() {
+  const pesoUnitario = parseFloat(document.getElementById('peso').value) || 0;
+  const cantidad = parseInt(document.getElementById('cantidad').value) || 0;
+  const distanciaKm = parseFloat(document.getElementById('distanciaKm').value) || 0;
+  const requiereManiobra = document.getElementById('maniobra').value === 'con';
+
+  const alertNotice = document.getElementById('alertNotice');
+  const precioTotalEl = document.getElementById('precioTotal');
+  const desgloseText = document.getElementById('desgloseText');
+  const btnWhatsapp = document.getElementById('btnWhatsapp');
+
+  alertNotice.style.display = 'none';
+  btnWhatsapp.disabled = true;
+
+  if (cantidad === 0 || pesoUnitario === 0) {
+    actualizarGauge(0);
+    precioTotalEl.innerHTML = "$0 <small>MXN</small>";
+    return;
+  }
+
+  const pesoTotal = pesoUnitario * cantidad;
+  actualizarGauge(pesoTotal);
+
+  if (pesoTotal > CONFIG.SAVEIRO_MAX_KG) {
+    alertNotice.innerText = `El peso total (${pesoTotal.toFixed(1)} kg) supera el límite de 1 Saveiro (650 kg).`;
+    alertNotice.style.display = 'block';
+    precioTotalEl.innerText = "Exceso de Carga";
+    desgloseText.innerText = "Ajusta la cantidad o solicita unidad de mayor tonelaje";
+    return;
+  }
+
+  if (distanciaKm <= 0) {
+    precioTotalEl.innerHTML = "$0 <small>MXN</small>";
+    desgloseText.innerText = "Ingresa la distancia en km o activa GPS";
+    return;
+  }
+
+  let factorSobrecarga = pesoTotal > 400 ? 1.15 : 1.0;
+  let costoDistancia = distanciaKm * CONFIG.COSTO_PER_KM;
+  let costoManiobra = requiereManiobra ? (cantidad * CONFIG.COSTO_MANIOBRA_UNIDAD) : 0;
+
+  let tarifaTotal = Math.round(((CONFIG.TARIFA_BASE + costoDistancia) * factorSobrecarga) + costoManiobra);
+
+  precioTotalEl.innerHTML = `$${tarifaTotal.toLocaleString()} <small>MXN</small>`;
+  desgloseText.innerText = `${distanciaKm} km | ${cantidad} cajas (${pesoTotal} kg) ${requiereManiobra ? '| C/ Maniobra' : ''}`;
+  btnWhatsapp.disabled = false;
+
+  btnWhatsapp.onclick = () => {
+    const calle = document.getElementById('calle').value || 'No especificada';
+    const colonia = document.getElementById('colonia').value || 'Monterrey';
+    const fecha = document.getElementById('fechaEnvio').value;
+
+    const mensaje = `Hola Provac Express, solicito flete:%0A- *Carga:* ${cantidad} cajas (${pesoTotal} kg)%0A- *Fecha:* ${fecha}%0A- *Destino:* ${calle}, ${colonia}%0A- *Distancia:* ${distanciaKm} km%0A- *Cotización:* $${tarifaTotal} MXN`;
+    window.open(`https://wa.me/${CONFIG.WHATSAPP_PHONE}?text=${mensaje}`, '_blank');
+  };
+}
+
+function actualizarGauge(pesoTotal) {
+  const gaugeFill = document.getElementById('gaugeFill');
+  const gaugeText = document.getElementById('gaugeText');
+  const pct = Math.min((pesoTotal / CONFIG.SAVEIRO_MAX_KG) * 100, 100);
+
+  if (gaugeFill && gaugeText) {
+    gaugeFill.style.width = `${pct}%`;
+    gaugeText.innerText = `${pesoTotal.toFixed(1)} kg / 650 kg`;
+    gaugeFill.style.backgroundColor = pesoTotal > CONFIG.SAVEIRO_MAX_KG ? 'var(--danger)' : 'var(--success)';
   }
 }
