@@ -297,3 +297,90 @@ function setupCatalogSearch() {
     renderCatalog(filtrados);
   });
 }
+
+/**
+ * Mapa interactivo
+ */
+
+// Variables globales para el mapa
+let map = null;
+let markerBodega = null;
+let markerEntrega = null;
+
+// Coordenadas de tu base / bodega (Apodaca / Monterrey)
+const BODEGA_COORDS = [25.7800, -100.1800];
+
+/**
+ * Inicializa el mapa interactivo dentro del modal
+ */
+function initMap() {
+  const mapContainer = document.getElementById('mapaFlete');
+  if (!mapContainer || map !== null) return; // Evita reinicializar si ya existe
+
+  // 1. Crear el mapa centrado en Monterrey
+  map = L.map('mapaFlete').setView(BODEGA_COORDS, 11);
+
+  // 2. Cargar capas gratuitas de OpenStreetMap
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 18,
+    attribution: '© OpenStreetMap'
+  }).addTo(map);
+
+  // 3. Marcador Fijo: Bodega Provac Express
+  markerBodega = L.marker(BODEGA_COORDS).addTo(map)
+    .bindPopup('<b>Bodega Provac Express</b><br>Punto de Origen')
+    .openPopup();
+
+  // 4. Marcador Arrastrable: Punto de Entrega
+  const defaultEntrega = [25.6866, -100.3161]; // Centro de Monterrey
+  markerEntrega = L.marker(defaultEntrega, { draggable: true }).addTo(map)
+    .bindPopup('Arrastra o haz clic para marcar la entrega');
+
+  // Evento al arrastrar el pin de entrega
+  markerEntrega.on('dragend', function (e) {
+    const coords = e.target.getLatLng();
+    actualizarDistanciaDesdeMapa(coords.lat, coords.lng);
+  });
+
+  // Evento al hacer clic en cualquier parte del mapa
+  map.on('click', function (e) {
+    markerEntrega.setLatLng(e.latlng);
+    actualizarDistanciaDesdeMapa(e.latlng.lat, e.latlng.lng);
+  });
+}
+
+/**
+ * Calcula la distancia desde la bodega al punto seleccionado y actualiza el input
+ */
+function actualizarDistanciaDesdeMapa(lat, lng) {
+  const R = 6371; // Radio de la Tierra en km
+  const dLat = (lat - BODEGA_COORDS[0]) * Math.PI / 180;
+  const dLng = (lng - BODEGA_COORDS[1]) * Math.PI / 180;
+
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(BODEGA_COORDS[0] * Math.PI / 180) * Math.cos(lat * Math.PI / 180) *
+            Math.sin(dLng / 2) * Math.sin(dLng / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distanciaKm = (R * c * 1.3).toFixed(1); // Factor 1.3 para estimar ruta vial
+
+  // Actualizar el campo de distancia y recalcular cotización
+  const inputDist = document.getElementById('distanciaKm');
+  if (inputDist) {
+    inputDist.value = distanciaKm;
+    calcularCotizacion(); // Ejecuta el cálculo automático
+  }
+}
+
+// Modificar la función toggleModal para renderizar el mapa correctamente al abrir
+const originalToggleModal = window.toggleModal;
+window.toggleModal = function(show) {
+  if (originalToggleModal) originalToggleModal(show);
+  
+  if (show) {
+    setTimeout(() => {
+      initMap();
+      if (map) map.invalidateSize(); // Corrige renderizado de tamaño dentro de modales
+    }, 300);
+  }
+};
