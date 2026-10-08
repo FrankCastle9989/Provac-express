@@ -241,6 +241,10 @@ async function calcularRutaVialExacta(cOrigen, cDestino) {
 /**
  * Procesa y calcula la ruta automática leyendo los campos de dirección
  */
+
+/**
+ * Procesa y calcula la ruta automática leyendo los campos de dirección
+ */
 async function procesarRutaDesdeInputs() {
   const calleO = document.getElementById('calleOrigen')?.value.trim();
   const colO = document.getElementById('coloniaOrigen')?.value.trim();
@@ -328,7 +332,6 @@ async function actualizarRutaYDistancia() {
   
   calcularCotizacion();
 }
-
 
 /**
  * Lógica de cálculo de cotización
