@@ -238,6 +238,9 @@ async function calcularRutaVialExacta(cOrigen, cDestino) {
 /**
  * Procesa y calcula la ruta automática leyendo los campos de dirección
  */
+/**
+ * Procesa y calcula la ruta automática leyendo los campos de dirección
+ */
 async function procesarRutaDesdeInputs() {
   const calleO = document.getElementById('calleOrigen')?.value.trim();
   const colO = document.getElementById('coloniaOrigen')?.value.trim();
@@ -250,26 +253,30 @@ async function procesarRutaDesdeInputs() {
   const cpD = document.getElementById('cpDestino')?.value.trim();
 
   const statusO = document.getElementById('statusGpsOrigen');
-  const statusD = document.getElementById('statusGpsDestino');
 
   if (calleO && colO && calleD && colD) {
     if (statusO) statusO.textContent = "⏳ Calculando ruta por carretera...";
 
-    const geoOrigen = await geocodificarDireccionTexto(calleO, colO, munO, cpO);
-    const geoDestino = await geocodificarDireccionTexto(calleD, colD, munD, cpD);
+    try {
+      const geoOrigen = await geocodificarDireccionTexto(calleO, colO, munO, cpO);
+      const geoDestino = await geocodificarDireccionTexto(calleD, colD, munD, cpD);
 
-    if (geoOrigen && geoDestino) {
-      coordsOrigen = geoOrigen;
-      coordsDestino = geoDestino;
+      if (geoOrigen) {
+        coordsOrigen = geoOrigen;
+        if (markerOrigen) markerOrigen.setLatLng(coordsOrigen);
+      }
+      if (geoDestino) {
+        coordsDestino = geoDestino;
+        if (markerDestino) markerDestino.setLatLng(coordsDestino);
+      }
 
-      if (markerOrigen) markerOrigen.setLatLng(coordsOrigen);
-      if (markerDestino) markerDestino.setLatLng(coordsDestino);
+      await actualizarRutaYDistancia();
 
-      actualizarRutaYDistancia();
-      if (statusO) statusO.textContent = "✅ Ruta y distancia actualizadas por carretera.";
-      if (statusD) statusD.textContent = "";
-    } else {
-      if (statusO) statusO.textContent = "⚠️ No se encontró la dirección exacta. Puedes mover los pines en el mapa.";
+      if (statusO) statusO.textContent = "✅ Ruta y distancia calculadas correctamente.";
+    } catch (err) {
+      console.warn("Fallo en API remota, usando distancia estimada por mapa:", err);
+      await actualizarRutaYDistancia();
+      if (statusO) statusO.textContent = "📍 Distancia calculada con la ubicación del mapa.";
     }
   }
 }
@@ -278,25 +285,50 @@ async function procesarRutaDesdeInputs() {
  * Actualiza los pines, dibuja la línea de ruta en Leaflet y calcula el precio
  */
 async function actualizarRutaYDistancia() {
-  const resultadoRuta = await calcularRutaVialExacta(coordsOrigen, coordsDestino);
+  const inputDist = document.getElementById('distanciaKm');
+  let kmFinales = 0;
 
-  if (resultadoRuta) {
-    const inputDist = document.getElementById('distanciaKm');
-    if (inputDist) inputDist.value = resultadoRuta.distanciaKm;
+  try {
+    // Intenta consultar la ruta vial exacta por OSRM
+    const resultadoRuta = await calcularRutaVialExacta(coordsOrigen, coordsDestino);
 
-    // Dibujar línea de ruta en el mapa
-    if (map && typeof L !== 'undefined') {
-      if (routeLine) map.removeLayer(routeLine);
-      routeLine = L.geoJSON(resultadoRuta.geometry, {
-        style: { color: '#0052cc', weight: 4, opacity: 0.8 }
-      }).addTo(map);
+    if (resultadoRuta && resultadoRuta.distanciaKm > 0) {
+      kmFinales = resultadoRuta.distanciaKm;
 
-      map.fitBounds([coordsOrigen, coordsDestino], { padding: [40, 40] });
+      // Dibujar línea de ruta en el mapa si está disponible
+      if (map && typeof L !== 'undefined' && resultadoRuta.geometry) {
+        if (routeLine) map.removeLayer(routeLine);
+        routeLine = L.geoJSON(resultadoRuta.geometry, {
+          style: { color: '#0052cc', weight: 4, opacity: 0.8 }
+        }).addTo(map);
+
+        map.fitBounds([coordsOrigen, coordsDestino], { padding: [40, 40] });
+      }
+    } else {
+      throw new Error("No se obtuvo respuesta de la API de ruteo");
     }
+  } catch (e) {
+    // FALLBACK MATEMÁTICO RÁPIDO: Fórmula Haversine + 30% factor vial
+    const R = 6371;
+    const dLat = (coordsDestino[0] - coordsOrigen[0]) * Math.PI / 180;
+    const dLng = (coordsDestino[1] - coordsOrigen[1]) * Math.PI / 180;
 
-    calcularCotizacion();
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(coordsOrigen[0] * Math.PI / 180) * Math.cos(coordsDestino[0] * Math.PI / 180) *
+              Math.sin(dLng / 2) * Math.sin(dLng / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    kmFinales = parseFloat((R * c * 1.3).toFixed(1)); // 1.3 estimado de curva vial
   }
+
+  // Asignar el resultado y recalcular la cotización inmediatamente
+  if (inputDist && kmFinales > 0) {
+    inputDist.value = kmFinales;
+  }
+  
+  calcularCotizacion();
 }
+
 
 /**
  * Lógica de cálculo de cotización
