@@ -457,32 +457,80 @@ function obtenerUbicacionGPS() {
 /**
  * Enviar el detalle completo de ambas direcciones por WhatsApp
  */
+// Configurar la fecha mínima (Hoy) al cargar la calculadora
+function initFechaMinima() {
+  const fechaInput = document.getElementById('fechaEnvio');
+  if (fechaInput) {
+    const hoy = new Date().toISOString().split('T')[0];
+    fechaInput.min = hoy; // Evita seleccionar fechas pasadas
+    if (!fechaInput.value) {
+      fechaInput.value = hoy; // Selecciona hoy por defecto
+    }
+  }
+}
+
+/**
+ * Función para formatear la fecha seleccionada a texto legible en español
+ */
+function obtenerFechaTexto(fechaIso) {
+  if (!fechaIso) return "A acordar con el cliente";
+  
+  // Dividir la fecha para evitar desfases por zona horaria UTC
+  const [year, month, day] = fechaIso.split('-');
+  const fechaObj = new Date(year, month - 1, day);
+
+  const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  let fechaTexto = fechaObj.toLocaleDateString('es-MX', opciones);
+
+  // Capitalizar primera letra (ej. "Viernes, 9 de octubre de 2026")
+  return fechaTexto.charAt(0).toUpperCase() + fechaTexto.slice(1);
+}
+
+/**
+ * Envío actualizado hacia WhatsApp
+ */
 function enviarAWhatsApp() {
+  const form = document.getElementById('calcForm');
+  
+  // Validar campos requeridos
+  if (form && !form.checkValidity()) {
+    form.reportValidity();
+    return;
+  }
+
   const pesoUnit = document.getElementById('peso')?.value || 0;
   const cantidad = document.getElementById('cantidad')?.value || 0;
   const distanciaKm = document.getElementById('distanciaKm')?.value || 0;
-  const maniobra = document.getElementById('maniobra')?.value === 'con' ? 'Con maniobra' : 'Sin maniobra';
-  const fecha = document.getElementById('fechaEnvio')?.value || 'A acordar';
+  const maniobra = document.getElementById('maniobra')?.value === 'con' ? 'Con maniobra (Provac descarga)' : 'Sin maniobra (Cliente descarga)';
   
-  const calleOrigen = document.getElementById('calleOrigen')?.value || 'No especificada';
-  const coloniaOrigen = document.getElementById('coloniaOrigen')?.value || 'No especificada';
-  
-  const calleDestino = document.getElementById('calleDestino')?.value || 'No especificada';
-  const coloniaDestino = document.getElementById('coloniaDestino')?.value || 'No especificada';
+  // Obtener y formatear la fecha seleccionada en el calendario
+  const fechaRaw = document.getElementById('fechaEnvio')?.value;
+  const fechaFormateada = obtenerFechaTexto(fechaRaw);
+
+  const calleOrigen = document.getElementById('calleOrigen')?.value.trim();
+  const coloniaOrigen = document.getElementById('coloniaOrigen')?.value.trim();
+  const calleDestino = document.getElementById('calleDestino')?.value.trim();
+  const coloniaDestino = document.getElementById('coloniaDestino')?.value.trim();
   
   const totalText = document.getElementById('precioTotal')?.innerText || '$0 MXN';
   const pesoTotal = (parseFloat(pesoUnit) * parseInt(cantidad)).toFixed(1);
 
+  // Armar el mensaje para WhatsApp
   const mensaje = `¡Hola Provac Express! Solicitud de cotización de flete:%0A%0A` +
     `📦 *Carga:* ${cantidad} cajas (${pesoTotal} kg totales)%0A` +
+    `📅 *Fecha Programada:* ${fechaFormateada}%0A` +
     `📍 *Origen (Remitente):* ${calleOrigen}, ${coloniaOrigen}%0A` +
     `🎯 *Destino (Entrega):* ${calleDestino}, ${coloniaDestino}%0A` +
     `🗺️ *Distancia Estimada:* ${distanciaKm} km%0A` +
     `🚚 *Servicio:* ${maniobra}%0A` +
-    `📅 *Fecha:* ${fecha}%0A` +
     `💰 *Estimación:* ${totalText}%0A%0A` +
-    `¿Tienen disponibilidad de unidades para esta ruta?`;
+    `¿Tienen disponibilidad para cubrir el servicio en esa fecha?`;
 
   const telefono = '528117616817';
   window.open(`https://wa.me/${telefono}?text=${mensaje}`, '_blank');
 }
+
+// Asegurar ejecutar initFechaMinima() al iniciar la calculadora
+document.addEventListener('DOMContentLoaded', () => {
+  initFechaMinima();
+});

@@ -69,6 +69,8 @@
 
 
 
+
+
 <div class="form-step">
   <span class="step-num">02</span>
   <h4>Programación y Ruta de Entrega</h4>
@@ -76,8 +78,9 @@
 
 <div class="input-row cols-2">
   <div class="input-field">
-    <label for="fechaEnvio">Fecha requerida</label>
-    <input type="date" id="fechaEnvio">
+    <label for="fechaEnvio">Fecha requerida *</label>
+      <input type="date" id="fechaEnvio" required style="cursor: pointer;">
+        <small class="gps-hint">Haz clic para abrir el calendario y seleccionar el día de recolección</small>
   </div>
   <div class="input-field">
     <label for="maniobra">Maniobra de descarga</label>
@@ -93,12 +96,12 @@
   <label class="group-title">📍 Ubicación de Origen (Remitente)</label>
   <div class="input-row cols-2">
     <div class="input-field">
-      <label for="calleOrigen">Calle y Número</label>
-      <input type="text" id="calleOrigen" placeholder="Ej: Av. Industrias 400">
+      <label for="calleOrigen">Calle y Número *</label>
+      <input type="text" id="calleOrigen" placeholder="Ej: Av. Industrias 400" required>
     </div>
     <div class="input-field">
-      <label for="coloniaOrigen">Colonia / Municipio</label>
-      <input type="text" id="coloniaOrigen" placeholder="Ej: Apodaca, N.L.">
+      <label for="coloniaOrigen">Colonia / Municipio *</label>
+      <input type="text" id="coloniaOrigen" placeholder="Ej: Apodaca, N.L." required>
     </div>
   </div>
 </div>
@@ -108,12 +111,12 @@
   <label class="group-title">🎯 Ubicación de Destino (Entrega)</label>
   <div class="input-row cols-2">
     <div class="input-field">
-      <label for="calleDestino">Calle y Número</label>
-      <input type="text" id="calleDestino" placeholder="Ej: Av. Félix U. Gómez 1200">
+      <label for="calleDestino">Calle y Número *</label>
+      <input type="text" id="calleDestino" placeholder="Ej: Av. Félix U. Gómez 1200" required>
     </div>
     <div class="input-field">
-      <label for="coloniaDestino">Colonia / Municipio</label>
-      <input type="text" id="coloniaDestino" placeholder="Ej: Monterrey, N.L.">
+      <label for="coloniaDestino">Colonia / Municipio *</label>
+      <input type="text" id="coloniaDestino" placeholder="Ej: Monterrey, N.L." required>
     </div>
   </div>
 </div>
@@ -135,8 +138,8 @@
 
 <!-- DISTANCIA Y MAPA -->
 <div class="input-field">
-  <label for="distanciaKm">Distancia Total a Recorrer (Km)</label>
-  <input type="number" id="distanciaKm" placeholder="Ej: 18" min="1" step="0.1">
+  <label for="distanciaKm">Distancia Total a Recorrer (Km) *</label>
+  <input type="number" id="distanciaKm" placeholder="Ej: 18" min="1" step="0.1" required>
 </div>
 
 <!-- MAPA INTERACTIVO CON DOS PUNTOS -->
