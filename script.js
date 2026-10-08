@@ -1,5 +1,5 @@
 /**
- * Provac Express - Control de Interfaz, Modal Dinámico y Calculadora
+ * Provac Express - Control de Interfaz, Modal Dinámico, Calculadora y Ruteo Vial Real
  */
 
 // Datos de productos para el catálogo interactivo
@@ -25,10 +25,12 @@ let calcData = {
 let map = null;
 let markerOrigen = null;
 let markerDestino = null;
+let routeLine = null; // Línea trazada de la ruta
 
 // Coordenadas por defecto (Apodaca y Centro Monterrey)
 let coordsOrigen = [25.7800, -100.1800];
 let coordsDestino = [25.6866, -100.3161];
+let debounceTimer = null;
 
 // INICIALIZACIÓN
 document.addEventListener('DOMContentLoaded', () => {
@@ -100,8 +102,7 @@ window.toggleModal = function(show) {
 function initCalculatorEvents() {
   const inputs = [
     'largo', 'ancho', 'alto', 'peso', 'cantidad', 
-    'distanciaKm', 'maniobra', 'fechaEnvio', 
-    'calleOrigen', 'coloniaOrigen', 'calleDestino', 'coloniaDestino'
+    'maniobra', 'fechaEnvio'
   ];
   
   inputs.forEach(id => {
@@ -112,11 +113,28 @@ function initCalculatorEvents() {
     }
   });
 
+  // Escuchadores para recalcular geocodificación automáticamente al escribir direcciones
+  const addressInputs = [
+    'calleOrigen', 'coloniaOrigen', 'municipioOrigen', 'cpOrigen',
+    'calleDestino', 'coloniaDestino', 'municipioDestino', 'cpDestino'
+  ];
+
+  addressInputs.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('input', () => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(procesarRutaDesdeInputs, 800); // Espera a que termine de escribir
+      });
+      el.addEventListener('change', procesarRutaDesdeInputs);
+    }
+  });
+
   // Forzar apertura del selector de fecha
   const fechaInput = document.getElementById('fechaEnvio');
   const labelFecha = document.getElementById('labelFechaEnvio');
   
-  const abrirCalendario = (e) => {
+  const abrirCalendario = () => {
     if (fechaInput && 'showPicker' in HTMLInputElement.prototype) {
       try {
         fechaInput.showPicker();
@@ -131,15 +149,11 @@ function initCalculatorEvents() {
 
   // Botón GPS
   const btnGps = document.getElementById('btnGps');
-  if (btnGps) {
-    btnGps.addEventListener('click', obtenerUbicacionGPS);
-  }
+  if (btnGps) btnGps.addEventListener('click', obtenerUbicacionGPS);
 
   // Botón WhatsApp
   const btnWa = document.getElementById('btnWhatsapp');
-  if (btnWa) {
-    btnWa.addEventListener('click', enviarAWhatsApp);
-  }
+  if (btnWa) btnWa.addEventListener('click', enviarAWhatsApp);
 }
 
 /**
@@ -172,6 +186,110 @@ function obtenerFechaTexto(fechaIso) {
 }
 
 /**
+ * Geocodifica direcciones de texto a Coordenadas GPS (OpenStreetMap / Nominatim)
+ */
+async function geocodificarDireccionTexto(calle, colonia, municipio, cp) {
+  const query = encodeURIComponent(`${calle}, ${colonia}, ${cp ? cp + ',' : ''} ${municipio}, Nuevo León, México`);
+  const url = `https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`;
+
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    if (data && data.length > 0) {
+      return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+    }
+  } catch (error) {
+    console.error("Error en geocodificación:", error);
+  }
+  return null;
+}
+
+/**
+ * Consulta la ruta vial exacta por carretera (OSRM Routing Machine)
+ */
+async function calcularRutaVialExacta(cOrigen, cDestino) {
+  // OSRM requiere [Longitud, Latitud]
+  const url = `https://router.project-osrm.org/route/v1/driving/${cOrigen[1]},${cOrigen[0]};${cDestino[1]},${cDestino[0]}?overview=full&geometries=geojson`;
+
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    if (data.code === 'Ok' && data.routes.length > 0) {
+      const ruta = data.routes[0];
+      const distanciaKm = (ruta.distance / 1000).toFixed(1);
+      return {
+        distanciaKm: parseFloat(distanciaKm),
+        geometry: ruta.geometry
+      };
+    }
+  } catch (error) {
+    console.error("Error calculando ruta vial:", error);
+  }
+  return null;
+}
+
+/**
+ * Procesa y calcula la ruta automática leyendo los campos de dirección
+ */
+async function procesarRutaDesdeInputs() {
+  const calleO = document.getElementById('calleOrigen')?.value.trim();
+  const colO = document.getElementById('coloniaOrigen')?.value.trim();
+  const munO = document.getElementById('municipioOrigen')?.value || 'Apodaca';
+  const cpO = document.getElementById('cpOrigen')?.value.trim();
+
+  const calleD = document.getElementById('calleDestino')?.value.trim();
+  const colD = document.getElementById('coloniaDestino')?.value.trim();
+  const munD = document.getElementById('municipioDestino')?.value || 'Monterrey';
+  const cpD = document.getElementById('cpDestino')?.value.trim();
+
+  const status = document.getElementById('gpsStatusText');
+
+  if (calleO && colO && calleD && colD) {
+    if (status) status.textContent = "⏳ Calculando ruta por carretera...";
+
+    const geoOrigen = await geocodificarDireccionTexto(calleO, colO, munO, cpO);
+    const geoDestino = await geocodificarDireccionTexto(calleD, colD, munD, cpD);
+
+    if (geoOrigen && geoDestino) {
+      coordsOrigen = geoOrigen;
+      coordsDestino = geoDestino;
+
+      if (markerOrigen) markerOrigen.setLatLng(coordsOrigen);
+      if (markerDestino) markerDestino.setLatLng(coordsDestino);
+
+      actualizarRutaYDistancia();
+      if (status) status.textContent = "✅ Ruta y distancia actualizadas por carretera.";
+    } else {
+      if (status) status.textContent = "⚠️ No se encontró la dirección exacta. Puedes mover los pines en el mapa.";
+    }
+  }
+}
+
+/**
+ * Actualiza los pines, dibuja la línea de ruta en Leaflet y calcula el precio
+ */
+async function actualizarRutaYDistancia() {
+  const resultadoRuta = await calcularRutaVialExacta(coordsOrigen, coordsDestino);
+
+  if (resultadoRuta) {
+    const inputDist = document.getElementById('distanciaKm');
+    if (inputDist) inputDist.value = resultadoRuta.distanciaKm;
+
+    // Dibujar línea de ruta en el mapa
+    if (map && typeof L !== 'undefined') {
+      if (routeLine) map.removeLayer(routeLine);
+      routeLine = L.geoJSON(resultadoRuta.geometry, {
+        style: { color: '#0052cc', weight: 4, opacity: 0.8 }
+      }).addTo(map);
+
+      map.fitBounds([coordsOrigen, coordsDestino], { padding: [40, 40] });
+    }
+
+    calcularCotizacion();
+  }
+}
+
+/**
  * Lógica de cálculo de cotización
  */
 function calcularCotizacion() {
@@ -179,6 +297,11 @@ function calcularCotizacion() {
   const cantidad = parseInt(document.getElementById('cantidad')?.value) || 0;
   const distanciaKm = parseFloat(document.getElementById('distanciaKm')?.value) || 0;
   const maniobra = document.getElementById('maniobra')?.value || 'sin';
+
+  const calleO = document.getElementById('calleOrigen')?.value.trim();
+  const colO = document.getElementById('coloniaOrigen')?.value.trim();
+  const calleD = document.getElementById('calleDestino')?.value.trim();
+  const colD = document.getElementById('coloniaDestino')?.value.trim();
 
   const pesoTotal = pesoUnit * cantidad;
   const gaugeFill = document.getElementById('gaugeFill');
@@ -207,9 +330,11 @@ function calcularCotizacion() {
     alertNotice.style.display = 'none';
   }
 
-  if (pesoTotal <= 0 || distanciaKm <= 0) {
+  const direccionesCompletas = calleO && colO && calleD && colD;
+
+  if (pesoTotal <= 0 || distanciaKm <= 0 || !direccionesCompletas) {
     if (precioTotalEl) precioTotalEl.innerHTML = `$0 <small>MXN</small>`;
-    if (desgloseText) desgloseText.textContent = 'Ingresa dimensiones, peso y distancia en km.';
+    if (desgloseText) desgloseText.textContent = 'Completa las especificaciones de carga y direcciones de origen/destino.';
     if (btnWa) btnWa.disabled = true;
     return;
   }
@@ -226,7 +351,7 @@ function calcularCotizacion() {
   }
 
   if (desgloseText) {
-    desgloseText.textContent = `${unidadesNecesarias} unidad(es) Saveiro • ${distanciaKm} km ${maniobra === 'con' ? '• Con maniobra' : ''}`;
+    desgloseText.textContent = `${unidadesNecesarias} unidad(es) Saveiro • ${distanciaKm} km viales ${maniobra === 'con' ? '• Con maniobra' : ''}`;
   }
 
   if (btnWa) {
@@ -279,41 +404,19 @@ function initMap() {
 
   markerOrigen.on('dragend', function (e) {
     coordsOrigen = [e.target.getLatLng().lat, e.target.getLatLng().lng];
-    recalcularDistanciaMapa();
+    actualizarRutaYDistancia();
   });
 
   markerDestino.on('dragend', function (e) {
     coordsDestino = [e.target.getLatLng().lat, e.target.getLatLng().lng];
-    recalcularDistanciaMapa();
+    actualizarRutaYDistancia();
   });
 
-  recalcularDistanciaMapa();
+  actualizarRutaYDistancia();
 }
 
 /**
- * Recalcular la distancia entre marcadores
- */
-function recalcularDistanciaMapa() {
-  const R = 6371;
-  const dLat = (coordsDestino[0] - coordsOrigen[0]) * Math.PI / 180;
-  const dLng = (coordsDestino[1] - coordsOrigen[1]) * Math.PI / 180;
-
-  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(coordsOrigen[0] * Math.PI / 180) * Math.cos(coordsDestino[0] * Math.PI / 180) *
-            Math.sin(dLng / 2) * Math.sin(dLng / 2);
-
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const distanciaKm = (R * c * 1.3).toFixed(1);
-
-  const inputDist = document.getElementById('distanciaKm');
-  if (inputDist) {
-    inputDist.value = distanciaKm;
-    calcularCotizacion();
-  }
-}
-
-/**
- * Obtener ubicación por GPS
+ * Obtener ubicación por GPS del dispositivo
  */
 function obtenerUbicacionGPS() {
   const status = document.getElementById('gpsStatusText');
@@ -342,16 +445,16 @@ function obtenerUbicacionGPS() {
       }
 
       if (map) map.setView([lat, lng], 12);
-      recalcularDistanciaMapa();
+      actualizarRutaYDistancia();
     },
     () => {
-      if (status) status.textContent = 'Error al obtener GPS. Ajusta los puntos manualmente en el mapa.';
+      if (status) status.textContent = 'Error al obtener GPS. Puedes mover los marcadores manualmente en el mapa.';
     }
   );
 }
 
 /**
- * Enviar mensaje formateado a WhatsApp
+ * Enviar mensaje con desglose formal a WhatsApp
  */
 function enviarAWhatsApp() {
   const form = document.getElementById('calcForm');
@@ -369,23 +472,32 @@ function enviarAWhatsApp() {
   const fechaRaw = document.getElementById('fechaEnvio')?.value;
   const fechaFormateada = obtenerFechaTexto(fechaRaw);
 
-  const calleOrigen = document.getElementById('calleOrigen')?.value.trim() || 'No especificada';
-  const coloniaOrigen = document.getElementById('coloniaOrigen')?.value.trim() || 'No especificada';
-  const calleDestino = document.getElementById('calleDestino')?.value.trim() || 'No especificada';
-  const coloniaDestino = document.getElementById('coloniaDestino')?.value.trim() || 'No especificada';
-  
+  const calleO = document.getElementById('calleOrigen')?.value.trim();
+  const colO = document.getElementById('coloniaOrigen')?.value.trim();
+  const munO = document.getElementById('municipioOrigen')?.value || 'Apodaca';
+  const cpO = document.getElementById('cpOrigen')?.value.trim();
+
+  const calleD = document.getElementById('calleDestino')?.value.trim();
+  const colD = document.getElementById('coloniaDestino')?.value.trim();
+  const munD = document.getElementById('municipioDestino')?.value || 'Monterrey';
+  const cpD = document.getElementById('cpDestino')?.value.trim();
+
   const totalText = document.getElementById('precioTotal')?.innerText || '$0 MXN';
   const pesoTotal = (parseFloat(pesoUnit) * parseInt(cantidad)).toFixed(1);
 
-  const mensaje = `¡Hola Provac Express! Solicitud de cotización de flete:%0A%0A` +
-    `📦 *Carga:* ${cantidad} cajas (${pesoTotal} kg totales)%0A` +
-    `📅 *Fecha Programada:* ${fechaFormateada}%0A` +
-    `📍 *Origen (Remitente):* ${calleOrigen}, ${coloniaOrigen}%0A` +
-    `🎯 *Destino (Entrega):* ${calleDestino}, ${coloniaDestino}%0A` +
-    `🗺️ *Distancia Estimada:* ${distanciaKm} km%0A` +
-    `🚚 *Servicio:* ${maniobra}%0A` +
-    `💰 *Estimación:* ${totalText}%0A%0A` +
-    `¿Tienen disponibilidad para cubrir el servicio en esa fecha?`;
+  const mensaje = `¡Hola Provac Express! Solicitud de cotización de flete formal:%0A%0A` +
+    `📅 *Fecha de Servicio:* ${fechaFormateada}%0A` +
+    `📦 *Detalle de Carga:* ${cantidad} cajas (${pesoTotal} kg totales)%0A%0A` +
+    `📍 *REMITENTE (Origen):*%0A` +
+    `• Calle: ${calleO}%0A` +
+    `• Colonia/Mpio: ${colO}, ${munO} ${cpO ? '(CP ' + cpO + ')' : ''}%0A%0A` +
+    `🎯 *DESTINO (Entrega):*%0A` +
+    `• Calle: ${calleD}%0A` +
+    `• Colonia/Mpio: ${colD}, ${munD} ${cpD ? '(CP ' + cpD + ')' : ''}%0A%0A` +
+    `🛣️ *Distancia Vial Calculada:* ${distanciaKm} km%0A` +
+    `🚚 *Servicio Maniobra:* ${maniobra}%0A` +
+    `💰 *COTIZACIÓN ESTIMADA:* ${totalText}%0A%0A` +
+    `Quedo a la espera de la confirmación de la unidad.`;
 
   const telefono = '528117616817';
   window.open(`https://wa.me/${telefono}?text=${mensaje}`, '_blank');

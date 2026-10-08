@@ -6,7 +6,7 @@
     <div class="modal-title-group">
       <span class="badge-mini">Cotizador Inteligente</span>
       <h2>Calculadora de Fletes Express</h2>
-      <p>Estima el costo exacto según volumen, peso y distancia real.</p>
+      <p>Estima el costo exacto según volumen, peso y distancia real por carretera.</p>
     </div>
 
     <form id="calcForm" onsubmit="return false;">
@@ -83,8 +83,30 @@
             <input type="text" id="calleOrigen" placeholder="Ej: Av. Industrias 400" required>
           </div>
           <div class="input-field">
-            <label for="coloniaOrigen">Colonia / Municipio *</label>
-            <input type="text" id="coloniaOrigen" placeholder="Ej: Apodaca, N.L." required>
+            <label for="coloniaOrigen">Colonia / Sector *</label>
+            <input type="text" id="coloniaOrigen" placeholder="Ej: Parque Industrial" required>
+          </div>
+        </div>
+        <div class="input-row cols-2">
+          <div class="input-field">
+            <label for="municipioOrigen">Municipio *</label>
+            <select id="municipioOrigen" class="select-small">
+              <option value="Apodaca" selected>Apodaca</option>
+              <option value="Monterrey">Monterrey</option>
+              <option value="San Nicolás de los Garza">San Nicolás</option>
+              <option value="Guadalupe">Guadalupe</option>
+              <option value="Santa Catarina">Santa Catarina</option>
+              <option value="San Pedro Garza García">San Pedro</option>
+
+              <option value="Escobedo">Escobedo</option>
+              <option value="Pesquería">Pesquería</option>
+              <option value="Juárez">Juárez</option>
+              <option value="García">García</option>
+            </select>
+          </div>
+          <div class="input-field">
+            <label for="cpOrigen">Código Postal (Opcional)</label>
+            <input type="text" id="cpOrigen" placeholder="Ej: 66600">
           </div>
         </div>
       </div>
@@ -98,8 +120,29 @@
             <input type="text" id="calleDestino" placeholder="Ej: Av. Félix U. Gómez 1200" required>
           </div>
           <div class="input-field">
-            <label for="coloniaDestino">Colonia / Municipio *</label>
-            <input type="text" id="coloniaDestino" placeholder="Ej: Monterrey, N.L." required>
+            <label for="coloniaDestino">Colonia / Sector *</label>
+            <input type="text" id="coloniaDestino" placeholder="Ej: Industrial" required>
+          </div>
+        </div>
+        <div class="input-row cols-2">
+          <div class="input-field">
+            <label for="municipioDestino">Municipio *</label>
+            <select id="municipioDestino" class="select-small">
+              <option value="Monterrey" selected>Monterrey</option>
+              <option value="Apodaca">Apodaca</option>
+              <option value="San Nicolás de los Garza">San Nicolás</option>
+              <option value="Guadalupe">Guadalupe</option>
+              <option value="Santa Catarina">Santa Catarina</option>
+              <option value="San Pedro Garza García">San Pedro</option>
+              <option value="Escobedo">Escobedo</option>
+              <option value="Pesquería">Pesquería</option>
+              <option value="Juárez">Juárez</option>
+              <option value="García">García</option>
+            </select>
+          </div>
+          <div class="input-field">
+            <label for="cpDestino">Código Postal (Opcional)</label>
+            <input type="text" id="cpDestino" placeholder="Ej: 64440">
           </div>
         </div>
       </div>
@@ -121,13 +164,13 @@
 
       <!-- DISTANCIA Y MAPA -->
       <div class="input-field">
-        <label for="distanciaKm">Distancia Total a Recorrer (Km) *</label>
-        <input type="number" id="distanciaKm" placeholder="Ej: 18" min="1" step="0.1" required>
+        <label for="distanciaKm">Distancia Vial Calculada (Km) *</label>
+        <input type="number" id="distanciaKm" placeholder="Calculando por GPS/Vialidad..." min="0.1" step="0.1" required readonly>
       </div>
 
       <!-- MAPA INTERACTIVO CON DOS PUNTOS -->
       <div class="input-field">
-        <label>Ruta estimada en el mapa (Arrastra los marcadores Origen/Destino):</label>
+        <label>Ruta estimada en el mapa (Puedes ajustar arrastrando los puntos):</label>
         <div id="mapaFlete" style="height: 260px; width: 100%; border-radius: 8px; margin-bottom: 12px; z-index: 1;"></div>
       </div>
 
@@ -135,7 +178,7 @@
       <div class="price-summary-card">
         <span class="price-label">Estimación Total</span>
         <div class="price-value" id="precioTotal">$0 <small>MXN</small></div>
-        <p id="desgloseText" class="price-sub">Ingresa las especificaciones</p>
+        <p id="desgloseText" class="price-sub">Ingresa las especificaciones y direcciones completas</p>
       </div>
 
       <button type="button" id="btnWhatsapp" class="btn-submit-wa" disabled>
