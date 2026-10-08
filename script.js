@@ -22,6 +22,14 @@ let calcData = {
   costoManiobra: 150     // Adicional por maniobra
 };
 
+let map = null;
+let markerOrigen = null;
+let markerDestino = null;
+
+// Coordenadas por defecto (Bodega Apodaca y Centro Monterrey)
+let coordsOrigen = [25.7800, -100.1800];
+let coordsDestino = [25.6866, -100.3161];
+
 // INITIALIZATION
 document.addEventListener('DOMContentLoaded', () => {
   renderCatalog(PRODUCTOS_CATALOGO);
@@ -41,14 +49,16 @@ async function preloadCalculatorModal() {
         const html = await response.text();
         document.body.insertAdjacentHTML('beforeend', html);
         initCalculatorEvents();
+        initFechaMinima();
       } else {
-        console.warn('No se pudo cargar calculadora.html automáticamente. Verifica que el archivo exista en la raíz.');
+        console.warn('No se pudo cargar calculadora.html automáticamente.');
       }
     } catch (err) {
       console.error('Error al cargar la calculadora:', err);
     }
   } else {
     initCalculatorEvents();
+    initFechaMinima();
   }
 }
 
@@ -58,12 +68,17 @@ async function preloadCalculatorModal() {
 window.toggleModal = function(show) {
   const modal = document.getElementById('modalBackdrop');
   if (!modal) {
-    // Si aún no se ha inyectado, reintentar cargar
     preloadCalculatorModal().then(() => {
       const m = document.getElementById('modalBackdrop');
       if (m) {
-        if (show) m.classList.add('active');
-        else m.classList.remove('active');
+        if (show) {
+          m.classList.add('active');
+          document.body.style.overflow = 'hidden';
+          setTimeout(() => { if (typeof initMap === 'function') initMap(); }, 300);
+        } else {
+          m.classList.remove('active');
+          document.body.style.overflow = '';
+        }
       }
     });
     return;
@@ -71,7 +86,8 @@ window.toggleModal = function(show) {
 
   if (show) {
     modal.classList.add('active');
-    document.body.style.overflow = 'hidden'; // Evita scroll de fondo
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => { if (typeof initMap === 'function') initMap(); }, 300);
   } else {
     modal.classList.remove('active');
     document.body.style.overflow = '';
@@ -82,7 +98,11 @@ window.toggleModal = function(show) {
  * Eventos y lógica de cálculo dentro del formulario
  */
 function initCalculatorEvents() {
-  const inputs = ['largo', 'ancho', 'alto', 'peso', 'cantidad', 'distanciaKm', 'maniobra', 'fechaEnvio', 'calle', 'colonia'];
+  const inputs = [
+    'largo', 'ancho', 'alto', 'peso', 'cantidad', 
+    'distanciaKm', 'maniobra', 'fechaEnvio', 
+    'calleOrigen', 'coloniaOrigen', 'calleDestino', 'coloniaDestino'
+  ];
   
   inputs.forEach(id => {
     const el = document.getElementById(id);
@@ -91,6 +111,20 @@ function initCalculatorEvents() {
       el.addEventListener('change', calcularCotizacion);
     }
   });
+
+  // Habilitar apertura del calendario al hacer clic en cualquier parte del input
+  const fechaInput = document.getElementById('fechaEnvio');
+  if (fechaInput) {
+    fechaInput.addEventListener('click', () => {
+      if ('showPicker' in HTMLInputElement.prototype) {
+        try {
+          fechaInput.showPicker();
+        } catch (e) {
+          // Fallback para navegadores antiguos
+        }
+      }
+    });
+  }
 
   // Botón GPS
   const btnGps = document.getElementById('btnGps');
@@ -106,12 +140,38 @@ function initCalculatorEvents() {
 }
 
 /**
+ * Configurar la fecha mínima (Hoy) al cargar la calculadora
+ */
+function initFechaMinima() {
+  const fechaInput = document.getElementById('fechaEnvio');
+  if (fechaInput) {
+    const hoy = new Date().toISOString().split('T')[0];
+    fechaInput.min = hoy; // Evita seleccionar fechas pasadas
+    if (!fechaInput.value) {
+      fechaInput.value = hoy; // Selecciona hoy por defecto
+    }
+  }
+}
+
+/**
+ * Convierte la fecha seleccionada en texto legible en español
+ */
+function obtenerFechaTexto(fechaIso) {
+  if (!fechaIso) return "A acordar con el cliente";
+  
+  const [year, month, day] = fechaIso.split('-');
+  const fechaObj = new Date(year, month - 1, day);
+
+  const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  let fechaTexto = fechaObj.toLocaleDateString('es-MX', opciones);
+
+  return fechaTexto.charAt(0).toUpperCase() + fechaTexto.slice(1);
+}
+
+/**
  * Lógica matemática de la calculadora de fletes
  */
 function calcularCotizacion() {
-  const largo = parseFloat(document.getElementById('largo')?.value) || 0;
-  const ancho = parseFloat(document.getElementById('ancho')?.value) || 0;
-  const alto = parseFloat(document.getElementById('alto')?.value) || 0;
   const pesoUnit = parseFloat(document.getElementById('peso')?.value) || 0;
   const cantidad = parseInt(document.getElementById('cantidad')?.value) || 0;
   const distanciaKm = parseFloat(document.getElementById('distanciaKm')?.value) || 0;
@@ -176,75 +236,154 @@ function calcularCotizacion() {
 }
 
 /**
- * Geolocalización del cliente para calcular distancia aproximada
+ * Inicializa el Mapa Leaflet con 2 Marcadores (Origen y Destino)
+ */
+function initMap() {
+  const mapContainer = document.getElementById('mapaFlete');
+  if (!mapContainer || map !== null) return;
+
+  map = L.map('mapaFlete').setView([25.7333, -100.2480], 11);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 18,
+    attribution: '© OpenStreetMap'
+  }).addTo(map);
+
+  const greenIcon = new L.Icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+  });
+
+  const redIcon = new L.Icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+  });
+
+  markerOrigen = L.marker(coordsOrigen, { draggable: true, icon: greenIcon }).addTo(map)
+    .bindPopup('<b>📍 Origen (Remitente)</b>');
+
+  markerDestino = L.marker(coordsDestino, { draggable: true, icon: redIcon }).addTo(map)
+    .bindPopup('<b>🎯 Destino (Entrega)</b>');
+
+  markerOrigen.on('dragend', function (e) {
+    coordsOrigen = [e.target.getLatLng().lat, e.target.getLatLng().lng];
+    recalcularDistanciaMapa();
+  });
+
+  markerDestino.on('dragend', function (e) {
+    coordsDestino = [e.target.getLatLng().lat, e.target.getLatLng().lng];
+    recalcularDistanciaMapa();
+  });
+
+  recalcularDistanciaMapa();
+}
+
+/**
+ * Recalcula la distancia a partir de la posición de los pines en el mapa
+ */
+function recalcularDistanciaMapa() {
+  const R = 6371;
+  const dLat = (coordsDestino[0] - coordsOrigen[0]) * Math.PI / 180;
+  const dLng = (coordsDestino[1] - coordsOrigen[1]) * Math.PI / 180;
+
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(coordsOrigen[0] * Math.PI / 180) * Math.cos(coordsDestino[0] * Math.PI / 180) *
+            Math.sin(dLng / 2) * Math.sin(dLng / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distanciaKm = (R * c * 1.3).toFixed(1);
+
+  const inputDist = document.getElementById('distanciaKm');
+  if (inputDist) {
+    inputDist.value = distanciaKm;
+    calcularCotizacion();
+  }
+}
+
+/**
+ * Obtener GPS y asignar a Origen o Destino
  */
 function obtenerUbicacionGPS() {
   const status = document.getElementById('gpsStatusText');
-  const inputDist = document.getElementById('distanciaKm');
+  const target = document.getElementById('targetGps')?.value || 'destino';
 
   if (!navigator.geolocation) {
     if (status) status.textContent = 'La geolocalización no es compatible con tu navegador.';
     return;
   }
 
-  if (status) status.textContent = 'Obteniendo ubicación actual...';
+  if (status) status.textContent = 'Obteniendo GPS...';
 
   navigator.geolocation.getCurrentPosition(
     (position) => {
-      // Coordenadas fijas de la base/bodega en Apodaca/Monterrey
-      const baseLat = 25.7800;
-      const baseLng = -100.1800;
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
 
-      const userLat = position.coords.latitude;
-      const userLng = position.coords.longitude;
-
-      // Cálculo de distancia mediante fórmula Haversine
-      const R = 6371; 
-      const dLat = (userLat - baseLat) * Math.PI / 180;
-      const dLng = (userLng - baseLng) * Math.PI / 180;
-      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(baseLat * Math.PI / 180) * Math.cos(userLat * Math.PI / 180) *
-                Math.sin(dLng/2) * Math.sin(dLng/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      const distancia = R * c * 1.3; // Factor 1.3 para aproximación por vialidades
-
-      if (inputDist) {
-        inputDist.value = distancia.toFixed(1);
-        calcularCotizacion();
+      if (target === 'origen') {
+        coordsOrigen = [lat, lng];
+        if (markerOrigen) markerOrigen.setLatLng(coordsOrigen);
+        if (status) status.textContent = '📍 Origen actualizado con tu GPS.';
+      } else {
+        coordsDestino = [lat, lng];
+        if (markerDestino) markerDestino.setLatLng(coordsDestino);
+        if (status) status.textContent = '🎯 Destino actualizado con tu GPS.';
       }
-      if (status) status.textContent = `📍 Ubicación detectada (~${distancia.toFixed(1)} km a bodega).`;
+
+      if (map) map.setView([lat, lng], 12);
+      recalcularDistanciaMapa();
     },
     () => {
-      if (status) status.textContent = 'No se pudo obtener la ubicación. Ingresa los km manualmente.';
+      if (status) status.textContent = 'Error al obtener GPS. Puedes ajustar los puntos manualmente en el mapa.';
     }
   );
 }
 
 /**
- * Redirección con mensaje estructurado hacia WhatsApp
+ * Formateo y envío de mensaje a WhatsApp
  */
 function enviarAWhatsApp() {
+  const form = document.getElementById('calcForm');
+  
+  if (form && !form.checkValidity()) {
+    form.reportValidity();
+    return;
+  }
+
   const pesoUnit = document.getElementById('peso')?.value || 0;
   const cantidad = document.getElementById('cantidad')?.value || 0;
   const distanciaKm = document.getElementById('distanciaKm')?.value || 0;
-  const maniobra = document.getElementById('maniobra')?.value === 'con' ? 'Con maniobra' : 'Sin maniobra';
-  const fecha = document.getElementById('fechaEnvio')?.value || 'A acordar';
-  const calle = document.getElementById('calle')?.value || 'No especificada';
-  const colonia = document.getElementById('colonia')?.value || 'No especificada';
-  const totalText = document.getElementById('precioTotal')?.innerText || '$0 MXN';
+  const maniobra = document.getElementById('maniobra')?.value === 'con' ? 'Con maniobra (Provac descarga)' : 'Sin maniobra (Cliente descarga)';
+  
+  const fechaRaw = document.getElementById('fechaEnvio')?.value;
+  const fechaFormateada = obtenerFechaTexto(fechaRaw);
 
+  const calleOrigen = document.getElementById('calleOrigen')?.value.trim() || 'No especificada';
+  const coloniaOrigen = document.getElementById('coloniaOrigen')?.value.trim() || 'No especificada';
+  const calleDestino = document.getElementById('calleDestino')?.value.trim() || 'No especificada';
+  const coloniaDestino = document.getElementById('coloniaDestino')?.value.trim() || 'No especificada';
+  
+  const totalText = document.getElementById('precioTotal')?.innerText || '$0 MXN';
   const pesoTotal = (parseFloat(pesoUnit) * parseInt(cantidad)).toFixed(1);
 
-  const mensaje = `¡Hola Provac Express! Quisiera solicitar una cotización de flete:%0A%0A` +
+  const mensaje = `¡Hola Provac Express! Solicitud de cotización de flete:%0A%0A` +
     `📦 *Carga:* ${cantidad} cajas (${pesoTotal} kg totales)%0A` +
-    `📍 *Destino:* ${calle}, ${colonia}%0A` +
-    `🗺️ *Distancia estimada:* ${distanciaKm} km%0A` +
+    `📅 *Fecha Programada:* ${fechaFormateada}%0A` +
+    `📍 *Origen (Remitente):* ${calleOrigen}, ${coloniaOrigen}%0A` +
+    `🎯 *Destino (Entrega):* ${calleDestino}, ${coloniaDestino}%0A` +
+    `🗺️ *Distancia Estimada:* ${distanciaKm} km%0A` +
     `🚚 *Servicio:* ${maniobra}%0A` +
-    `📅 *Fecha de Entrega:* ${fecha}%0A` +
     `💰 *Estimación:* ${totalText}%0A%0A` +
-    `¿Me podrían confirmar disponibilidad de unidades?`;
+    `¿Tienen disponibilidad para cubrir el servicio en esa fecha?`;
 
-  const telefono = '528117616817'; // Número Provac Express
+  const telefono = '528117616817';
   window.open(`https://wa.me/${telefono}?text=${mensaje}`, '_blank');
 }
 
@@ -297,240 +436,3 @@ function setupCatalogSearch() {
     renderCatalog(filtrados);
   });
 }
-
-/**
- * Mapa interactivo
- */
-
-/**
- * Provac Express - Lógica de Calculadora con Origen/Destino y Mapa
- */
-
-let map = null;
-let markerOrigen = null;
-let markerDestino = null;
-
-// Coordenadas por defecto (Bodega Apodaca y Centro Monterrey)
-let coordsOrigen = [25.7800, -100.1800];
-let coordsDestino = [25.6866, -100.3161];
-
-/**
- * Inicialización de Eventos de la Calculadora
- */
-function initCalculatorEvents() {
-  const inputs = [
-    'largo', 'ancho', 'alto', 'peso', 'cantidad', 
-    'distanciaKm', 'maniobra', 'fechaEnvio', 
-    'calleOrigen', 'coloniaOrigen', 'calleDestino', 'coloniaDestino'
-  ];
-  
-  inputs.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.addEventListener('input', calcularCotizacion);
-      el.addEventListener('change', calcularCotizacion);
-    }
-  });
-
-  const btnGps = document.getElementById('btnGps');
-  if (btnGps) btnGps.addEventListener('click', obtenerUbicacionGPS);
-
-  const btnWa = document.getElementById('btnWhatsapp');
-  if (btnWa) btnWa.addEventListener('click', enviarAWhatsApp);
-}
-
-/**
- * Inicializa el Mapa Leaflet con 2 Marcadores (Origen y Destino)
- */
-function initMap() {
-  const mapContainer = document.getElementById('mapaFlete');
-  if (!mapContainer || map !== null) return;
-
-  map = L.map('mapaFlete').setView([25.7333, -100.2480], 11);
-
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 18,
-    attribution: '© OpenStreetMap'
-  }).addTo(map);
-
-  // Marcador Verde: Origen (Remitente)
-  const greenIcon = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
-  });
-
-  // Marcador Rojo: Destino (Entrega)
-  const redIcon = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
-  });
-
-  markerOrigen = L.marker(coordsOrigen, { draggable: true, icon: greenIcon }).addTo(map)
-    .bindPopup('<b>📍 Origen (Remitente)</b>');
-
-  markerDestino = L.marker(coordsDestino, { draggable: true, icon: redIcon }).addTo(map)
-    .bindPopup('<b>🎯 Destino (Entrega)</b>');
-
-  // Evento arrastrar Origen
-  markerOrigen.on('dragend', function (e) {
-    coordsOrigen = [e.target.getLatLng().lat, e.target.getLatLng().lng];
-    recalcularDistanciaMapa();
-  });
-
-  // Evento arrastrar Destino
-  markerDestino.on('dragend', function (e) {
-    coordsDestino = [e.target.getLatLng().lat, e.target.getLatLng().lng];
-    recalcularDistanciaMapa();
-  });
-
-  recalcularDistanciaMapa();
-}
-
-/**
- * Calcula la distancia en línea vial estimada entre Origen y Destino
- */
-function recalcularDistanciaMapa() {
-  const R = 6371; // Radio terrestre en Km
-  const dLat = (coordsDestino[0] - coordsOrigen[0]) * Math.PI / 180;
-  const dLng = (coordsDestino[1] - coordsOrigen[1]) * Math.PI / 180;
-
-  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(coordsOrigen[0] * Math.PI / 180) * Math.cos(coordsDestino[0] * Math.PI / 180) *
-            Math.sin(dLng / 2) * Math.sin(dLng / 2);
-
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const distanciaKm = (R * c * 1.3).toFixed(1); // Factor 1.3 estimado de vialidad
-
-  const inputDist = document.getElementById('distanciaKm');
-  if (inputDist) {
-    inputDist.value = distanciaKm;
-    calcularCotizacion();
-  }
-}
-
-/**
- * Obtener GPS y asignar a Origen o Destino según selección
- */
-function obtenerUbicacionGPS() {
-  const status = document.getElementById('gpsStatusText');
-  const target = document.getElementById('targetGps')?.value || 'destino';
-
-  if (!navigator.geolocation) {
-    if (status) status.textContent = 'La geolocalización no es compatible.';
-    return;
-  }
-
-  if (status) status.textContent = 'Obteniendo GPS...';
-
-  navigator.geolocation.getCurrentPosition(
-    (position) => {
-      const lat = position.coords.latitude;
-      const lng = position.coords.longitude;
-
-      if (target === 'origen') {
-        coordsOrigen = [lat, lng];
-        if (markerOrigen) markerOrigen.setLatLng(coordsOrigen);
-        if (status) status.textContent = '📍 Origen actualizado con tu GPS.';
-      } else {
-        coordsDestino = [lat, lng];
-        if (markerDestino) markerDestino.setLatLng(coordsDestino);
-        if (status) status.textContent = '🎯 Destino actualizado con tu GPS.';
-      }
-
-      if (map) map.setView([lat, lng], 12);
-      recalcularDistanciaMapa();
-    },
-    () => {
-      if (status) status.textContent = 'Error al obtener GPS. Ajusta manualmente.';
-    }
-  );
-}
-
-/**
- * Enviar el detalle completo de ambas direcciones por WhatsApp
- */
-// Configurar la fecha mínima (Hoy) al cargar la calculadora
-function initFechaMinima() {
-  const fechaInput = document.getElementById('fechaEnvio');
-  if (fechaInput) {
-    const hoy = new Date().toISOString().split('T')[0];
-    fechaInput.min = hoy; // Evita seleccionar fechas pasadas
-    if (!fechaInput.value) {
-      fechaInput.value = hoy; // Selecciona hoy por defecto
-    }
-  }
-}
-
-/**
- * Función para formatear la fecha seleccionada a texto legible en español
- */
-function obtenerFechaTexto(fechaIso) {
-  if (!fechaIso) return "A acordar con el cliente";
-  
-  // Dividir la fecha para evitar desfases por zona horaria UTC
-  const [year, month, day] = fechaIso.split('-');
-  const fechaObj = new Date(year, month - 1, day);
-
-  const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-  let fechaTexto = fechaObj.toLocaleDateString('es-MX', opciones);
-
-  // Capitalizar primera letra (ej. "Viernes, 9 de octubre de 2026")
-  return fechaTexto.charAt(0).toUpperCase() + fechaTexto.slice(1);
-}
-
-/**
- * Envío actualizado hacia WhatsApp
- */
-function enviarAWhatsApp() {
-  const form = document.getElementById('calcForm');
-  
-  // Validar campos requeridos
-  if (form && !form.checkValidity()) {
-    form.reportValidity();
-    return;
-  }
-
-  const pesoUnit = document.getElementById('peso')?.value || 0;
-  const cantidad = document.getElementById('cantidad')?.value || 0;
-  const distanciaKm = document.getElementById('distanciaKm')?.value || 0;
-  const maniobra = document.getElementById('maniobra')?.value === 'con' ? 'Con maniobra (Provac descarga)' : 'Sin maniobra (Cliente descarga)';
-  
-  // Obtener y formatear la fecha seleccionada en el calendario
-  const fechaRaw = document.getElementById('fechaEnvio')?.value;
-  const fechaFormateada = obtenerFechaTexto(fechaRaw);
-
-  const calleOrigen = document.getElementById('calleOrigen')?.value.trim();
-  const coloniaOrigen = document.getElementById('coloniaOrigen')?.value.trim();
-  const calleDestino = document.getElementById('calleDestino')?.value.trim();
-  const coloniaDestino = document.getElementById('coloniaDestino')?.value.trim();
-  
-  const totalText = document.getElementById('precioTotal')?.innerText || '$0 MXN';
-  const pesoTotal = (parseFloat(pesoUnit) * parseInt(cantidad)).toFixed(1);
-
-  // Armar el mensaje para WhatsApp
-  const mensaje = `¡Hola Provac Express! Solicitud de cotización de flete:%0A%0A` +
-    `📦 *Carga:* ${cantidad} cajas (${pesoTotal} kg totales)%0A` +
-    `📅 *Fecha Programada:* ${fechaFormateada}%0A` +
-    `📍 *Origen (Remitente):* ${calleOrigen}, ${coloniaOrigen}%0A` +
-    `🎯 *Destino (Entrega):* ${calleDestino}, ${coloniaDestino}%0A` +
-    `🗺️ *Distancia Estimada:* ${distanciaKm} km%0A` +
-    `🚚 *Servicio:* ${maniobra}%0A` +
-    `💰 *Estimación:* ${totalText}%0A%0A` +
-    `¿Tienen disponibilidad para cubrir el servicio en esa fecha?`;
-
-  const telefono = '528117616817';
-  window.open(`https://wa.me/${telefono}?text=${mensaje}`, '_blank');
-}
-
-// Asegurar ejecutar initFechaMinima() al iniciar la calculadora
-document.addEventListener('DOMContentLoaded', () => {
-  initFechaMinima();
-});
