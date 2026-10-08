@@ -147,9 +147,16 @@ function initCalculatorEvents() {
   if (fechaInput) fechaInput.addEventListener('click', abrirCalendario);
   if (labelFecha) labelFecha.addEventListener('click', abrirCalendario);
 
-  // Botón GPS
-  const btnGps = document.getElementById('btnGps');
-  if (btnGps) btnGps.addEventListener('click', obtenerUbicacionGPS);
+  // Botones GPS independientes para Origen y Destino
+  const btnGpsOrigen = document.getElementById('btnGpsOrigen');
+  if (btnGpsOrigen) {
+    btnGpsOrigen.addEventListener('click', () => obtenerUbicacionGPS('origen'));
+  }
+
+  const btnGpsDestino = document.getElementById('btnGpsDestino');
+  if (btnGpsDestino) {
+    btnGpsDestino.addEventListener('click', () => obtenerUbicacionGPS('destino'));
+  }
 
   // Botón WhatsApp
   const btnWa = document.getElementById('btnWhatsapp');
@@ -242,10 +249,11 @@ async function procesarRutaDesdeInputs() {
   const munD = document.getElementById('municipioDestino')?.value || 'Monterrey';
   const cpD = document.getElementById('cpDestino')?.value.trim();
 
-  const status = document.getElementById('gpsStatusText');
+  const statusO = document.getElementById('statusGpsOrigen');
+  const statusD = document.getElementById('statusGpsDestino');
 
   if (calleO && colO && calleD && colD) {
-    if (status) status.textContent = "⏳ Calculando ruta por carretera...";
+    if (statusO) statusO.textContent = "⏳ Calculando ruta por carretera...";
 
     const geoOrigen = await geocodificarDireccionTexto(calleO, colO, munO, cpO);
     const geoDestino = await geocodificarDireccionTexto(calleD, colD, munD, cpD);
@@ -258,9 +266,10 @@ async function procesarRutaDesdeInputs() {
       if (markerDestino) markerDestino.setLatLng(coordsDestino);
 
       actualizarRutaYDistancia();
-      if (status) status.textContent = "✅ Ruta y distancia actualizadas por carretera.";
+      if (statusO) statusO.textContent = "✅ Ruta y distancia actualizadas por carretera.";
+      if (statusD) statusD.textContent = "";
     } else {
-      if (status) status.textContent = "⚠️ No se encontró la dirección exacta. Puedes mover los pines en el mapa.";
+      if (statusO) statusO.textContent = "⚠️ No se encontró la dirección exacta. Puedes mover los pines en el mapa.";
     }
   }
 }
@@ -416,18 +425,19 @@ function initMap() {
 }
 
 /**
- * Obtener ubicación por GPS del dispositivo
+ * Obtener ubicación por GPS según el punto seleccionado (Origen o Destino)
  */
-function obtenerUbicacionGPS() {
-  const status = document.getElementById('gpsStatusText');
-  const target = document.getElementById('targetGps')?.value || 'destino';
+function obtenerUbicacionGPS(target) {
+  const statusEl = target === 'origen' 
+    ? document.getElementById('statusGpsOrigen') 
+    : document.getElementById('statusGpsDestino');
 
   if (!navigator.geolocation) {
-    if (status) status.textContent = 'La geolocalización no es compatible.';
+    if (statusEl) statusEl.textContent = 'La geolocalización no es compatible con tu dispositivo.';
     return;
   }
 
-  if (status) status.textContent = 'Obteniendo GPS...';
+  if (statusEl) statusEl.textContent = 'Obteniendo GPS...';
 
   navigator.geolocation.getCurrentPosition(
     (position) => {
@@ -437,18 +447,18 @@ function obtenerUbicacionGPS() {
       if (target === 'origen') {
         coordsOrigen = [lat, lng];
         if (markerOrigen) markerOrigen.setLatLng(coordsOrigen);
-        if (status) status.textContent = '📍 Origen actualizado con tu GPS.';
+        if (statusEl) statusEl.textContent = '📍 Origen fijado en tu ubicación actual.';
       } else {
         coordsDestino = [lat, lng];
         if (markerDestino) markerDestino.setLatLng(coordsDestino);
-        if (status) status.textContent = '🎯 Destino actualizado con tu GPS.';
+        if (statusEl) statusEl.textContent = '🎯 Destino fijado en tu ubicación actual.';
       }
 
-      if (map) map.setView([lat, lng], 12);
+      if (map) map.setView([lat, lng], 13);
       actualizarRutaYDistancia();
     },
     () => {
-      if (status) status.textContent = 'Error al obtener GPS. Puedes mover los marcadores manualmente en el mapa.';
+      if (statusEl) statusEl.textContent = 'No se pudo obtener el GPS. Puedes ingresar la dirección o mover los pines en el mapa.';
     }
   );
 }
