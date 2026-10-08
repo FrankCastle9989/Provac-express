@@ -26,11 +26,11 @@ let map = null;
 let markerOrigen = null;
 let markerDestino = null;
 
-// Coordenadas por defecto (Bodega Apodaca y Centro Monterrey)
+// Coordenadas por defecto (Apodaca y Centro Monterrey)
 let coordsOrigen = [25.7800, -100.1800];
 let coordsDestino = [25.6866, -100.3161];
 
-// INITIALIZATION
+// INICIALIZACIÓN
 document.addEventListener('DOMContentLoaded', () => {
   renderCatalog(PRODUCTOS_CATALOGO);
   setupCatalogFilters();
@@ -95,7 +95,7 @@ window.toggleModal = function(show) {
 };
 
 /**
- * Eventos y lógica de cálculo dentro del formulario
+ * Eventos y lógica del formulario
  */
 function initCalculatorEvents() {
   const inputs = [
@@ -112,19 +112,22 @@ function initCalculatorEvents() {
     }
   });
 
-  // Habilitar apertura del calendario al hacer clic en cualquier parte del input
+  // Forzar apertura del selector de fecha
   const fechaInput = document.getElementById('fechaEnvio');
-  if (fechaInput) {
-    fechaInput.addEventListener('click', () => {
-      if ('showPicker' in HTMLInputElement.prototype) {
-        try {
-          fechaInput.showPicker();
-        } catch (e) {
-          // Fallback para navegadores antiguos
-        }
+  const labelFecha = document.getElementById('labelFechaEnvio');
+  
+  const abrirCalendario = (e) => {
+    if (fechaInput && 'showPicker' in HTMLInputElement.prototype) {
+      try {
+        fechaInput.showPicker();
+      } catch (err) {
+        // Fallback nativo
       }
-    });
-  }
+    }
+  };
+
+  if (fechaInput) fechaInput.addEventListener('click', abrirCalendario);
+  if (labelFecha) labelFecha.addEventListener('click', abrirCalendario);
 
   // Botón GPS
   const btnGps = document.getElementById('btnGps');
@@ -140,21 +143,21 @@ function initCalculatorEvents() {
 }
 
 /**
- * Configurar la fecha mínima (Hoy) al cargar la calculadora
+ * Configurar la fecha mínima (Hoy)
  */
 function initFechaMinima() {
   const fechaInput = document.getElementById('fechaEnvio');
   if (fechaInput) {
     const hoy = new Date().toISOString().split('T')[0];
-    fechaInput.min = hoy; // Evita seleccionar fechas pasadas
+    fechaInput.min = hoy;
     if (!fechaInput.value) {
-      fechaInput.value = hoy; // Selecciona hoy por defecto
+      fechaInput.value = hoy;
     }
   }
 }
 
 /**
- * Convierte la fecha seleccionada en texto legible en español
+ * Formatear fecha a texto en español
  */
 function obtenerFechaTexto(fechaIso) {
   if (!fechaIso) return "A acordar con el cliente";
@@ -169,7 +172,7 @@ function obtenerFechaTexto(fechaIso) {
 }
 
 /**
- * Lógica matemática de la calculadora de fletes
+ * Lógica de cálculo de cotización
  */
 function calcularCotizacion() {
   const pesoUnit = parseFloat(document.getElementById('peso')?.value) || 0;
@@ -185,7 +188,6 @@ function calcularCotizacion() {
   const desgloseText = document.getElementById('desgloseText');
   const btnWa = document.getElementById('btnWhatsapp');
 
-  // Actualizar indicador de carga
   const porcentajeCarga = Math.min((pesoTotal / calcData.capacidadMaxKg) * 100, 100);
   if (gaugeFill) {
     gaugeFill.style.width = `${porcentajeCarga}%`;
@@ -195,18 +197,16 @@ function calcularCotizacion() {
     gaugeText.textContent = `${pesoTotal.toFixed(1)} kg / ${calcData.capacidadMaxKg} kg`;
   }
 
-  // Alerta de exceso de capacidad
   if (pesoTotal > calcData.capacidadMaxKg) {
     if (alertNotice) {
       alertNotice.style.display = 'block';
       alertNotice.className = 'alert-banner error';
-      alertNotice.innerHTML = `⚠️ El peso total (${pesoTotal.toFixed(1)} kg) supera los 650 kg por unidad Saveiro. Se requerirán unidades adicionales.`;
+      alertNotice.innerHTML = `⚠️ El peso total (${pesoTotal.toFixed(1)} kg) supera los 650 kg por unidad Saveiro.`;
     }
   } else if (alertNotice) {
     alertNotice.style.display = 'none';
   }
 
-  // Si no hay datos suficientes de distancia o peso, restablecer
   if (pesoTotal <= 0 || distanciaKm <= 0) {
     if (precioTotalEl) precioTotalEl.innerHTML = `$0 <small>MXN</small>`;
     if (desgloseText) desgloseText.textContent = 'Ingresa dimensiones, peso y distancia en km.';
@@ -214,7 +214,6 @@ function calcularCotizacion() {
     return;
   }
 
-  // Cálculo del precio
   const unidadesNecesarias = Math.ceil(pesoTotal / calcData.capacidadMaxKg) || 1;
   let subtotal = (calcData.tarifaBase + (distanciaKm * calcData.costoPorKm)) * unidadesNecesarias;
   
@@ -236,11 +235,16 @@ function calcularCotizacion() {
 }
 
 /**
- * Inicializa el Mapa Leaflet con 2 Marcadores (Origen y Destino)
+ * Inicialización de Leaflet con marcadores Origen/Destino
  */
 function initMap() {
   const mapContainer = document.getElementById('mapaFlete');
   if (!mapContainer || map !== null) return;
+
+  if (typeof L === 'undefined') {
+    console.warn('Leaflet no está cargado. Asegúrate de incluir Leaflet en index.html');
+    return;
+  }
 
   map = L.map('mapaFlete').setView([25.7333, -100.2480], 11);
 
@@ -287,7 +291,7 @@ function initMap() {
 }
 
 /**
- * Recalcula la distancia a partir de la posición de los pines en el mapa
+ * Recalcular la distancia entre marcadores
  */
 function recalcularDistanciaMapa() {
   const R = 6371;
@@ -309,14 +313,14 @@ function recalcularDistanciaMapa() {
 }
 
 /**
- * Obtener GPS y asignar a Origen o Destino
+ * Obtener ubicación por GPS
  */
 function obtenerUbicacionGPS() {
   const status = document.getElementById('gpsStatusText');
   const target = document.getElementById('targetGps')?.value || 'destino';
 
   if (!navigator.geolocation) {
-    if (status) status.textContent = 'La geolocalización no es compatible con tu navegador.';
+    if (status) status.textContent = 'La geolocalización no es compatible.';
     return;
   }
 
@@ -341,13 +345,13 @@ function obtenerUbicacionGPS() {
       recalcularDistanciaMapa();
     },
     () => {
-      if (status) status.textContent = 'Error al obtener GPS. Puedes ajustar los puntos manualmente en el mapa.';
+      if (status) status.textContent = 'Error al obtener GPS. Ajusta los puntos manualmente en el mapa.';
     }
   );
 }
 
 /**
- * Formateo y envío de mensaje a WhatsApp
+ * Enviar mensaje formateado a WhatsApp
  */
 function enviarAWhatsApp() {
   const form = document.getElementById('calcForm');
