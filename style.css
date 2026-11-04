@@ -843,3 +843,107 @@ input[readonly] {
   border: 1px solid var(--border-color);
   overflow: hidden;
 }
+
+/* ==========================================================================
+   AJUSTES RESPONSIVOS PARA DISPOSITIVOS MÓVILES (MOBILE FIRST & FLEX FIXES)
+   ========================================================================== */
+
+/* 1. Asegurar que los contenedores no rebasen la pantalla en móviles */
+@media (max-width: 768px) {
+  body {
+    overflow-x: hidden;
+  }
+
+  /* Reducir padding general en secciones principales */
+  .hero-section {
+    padding: 40px 16px 30px;
+  }
+
+  .services-section, 
+  .catalog-section, 
+  .main-footer {
+    padding: 0 16px;
+    margin: 40px auto;
+  }
+
+  /* Convertir los menús de navegación en apilados o compactos */
+  .nav-container {
+    padding: 0 8px;
+  }
+
+  .nav-links {
+    display: none; /* Oculta los links de texto en pantallas muy chicas para priorizar el botón de cotizar */
+  }
+
+  /* Hero: Títulos y textos adaptados a celulares */
+  .hero-section h1 {
+    font-size: 1.8rem;
+    line-height: 1.25;
+  }
+
+  .hero-section p {
+    font-size: 0.95rem;
+  }
+
+  .hero-cta-group {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .hero-cta-group button, 
+  .hero-cta-group a {
+    width: 100%;
+  }
+
+  /* Convertir filas de formularios de 2 y 3 columnas en 1 sola columna vertical en celulares */
+  .input-row, 
+  .input-row.cols-2, 
+  .input-row.cols-3 {
+    flex-direction: column !important;
+    gap: 0 !important;
+  }
+
+  .input-row > div {
+    width: 100% !important;
+    margin-bottom: 10px;
+  }
+
+  /* Adaptar el Modal de la Calculadora para que cubra la pantalla de forma cómoda en móvil */
+  .modal-window {
+    width: 95% !important;
+    max-height: 92vh !important;
+    padding: 20px 16px !important;
+    margin: auto;
+  }
+
+  /* Ajustar botones y elementos táctiles para mayor comodidad con el dedo */
+  input[type="text"], 
+  input[type="number"], 
+  input[type="date"], 
+  select {
+    font-size: 16px !important; /* Evita que iOS haga zoom automático incómodo al enfocar inputs */
+    padding: 12px;
+  }
+
+  .btn-submit-wa, .btn-primary {
+    font-size: 0.95rem;
+    padding: 14px;
+  }
+
+  /* Métricas en columna para pantallas pequeñas */
+  .metrics-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+
+/* 2. Corrección general para imágenes y mapas responsivos */
+img, svg, video {
+  max-width: 100%;
+  height: auto;
+}
+
+#mapaFlete {
+  width: 100% !important;
+  max-width: 100%;
+}
