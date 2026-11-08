@@ -530,22 +530,24 @@ function enviarAWhatsApp() {
   const totalText = document.getElementById('precioTotal')?.innerText || '$0 MXN';
   const pesoTotal = (parseFloat(pesoUnit) * parseInt(cantidad)).toFixed(1);
 
-  const mensaje = `¡Hola Provac Express! Solicitud de cotización de flete formal:%0A%0A` +
-    `📅 *Fecha de Servicio:* ${fechaFormateada}%0A` +
-    `📦 *Detalle de Carga:* ${cantidad} cajas (${pesoTotal} kg totales)%0A%0A` +
-    `📍 *REMITENTE (Origen):*%0A` +
-    `• Calle: ${calleO}%0A` +
-    `• Colonia/Mpio: ${colO}, ${munO} ${cpO ? '(CP ' + cpO + ')' : ''}%0A%0A` +
-    `🎯 *DESTINO (Entrega):*%0A` +
-    `• Calle: ${calleD}%0A` +
-    `• Colonia/Mpio: ${colD}, ${munD} ${cpD ? '(CP ' + cpD + ')' : ''}%0A%0A` +
-    `🛣️ *Distancia Vial Calculada:* ${distanciaKm} km%0A` +
-    `🚚 *Servicio Maniobra:* ${maniobra}%0A` +
-    `💰 *COTIZACIÓN ESTIMADA:* ${totalText}%0A%0A` +
-    `Quedo a la espera de la confirmación de la unidad.`;
+// Ejemplo de cómo armar el texto con emojis reales para WhatsApp
+let mensajeWhatsApp = `¡Hola Provac Express! Solicitud de cotización de flete formal:\n\n` +
+  `📅 *Fecha de Servicio:* ${fechaServicio}\n` +
+  `📦 *Detalle de Carga:* ${pesoTotal} kg totales\n\n` +
+  `📍 *REMITENTE (Origen):*\n` +
+  `  • Calle: ${calleOrigen}\n` +
+  `  • Colonia/Mpio: ${coloniaOrigen}\n\n` +
+  `🏁 *DESTINO (Entrega):*\n` +
+  `  • Calle: ${calleDestino}\n` +
+  `  • Colonia/Mpio: ${coloniaDestino}\n\n` +
+  `🛣️ *Distancia Vial Calculada:* ${distanciaKm} km\n` +
+  `🛠️ *Servicio Maniobra:* ${tipoManiobra}\n` +
+  `💰 *COTIZACIÓN ESTIMADA:* $${precioTotal} MXN\n\n` +
+  `Quedo a la espera de la confirmación de la unidad.`;
 
-  const telefono = '528117616817';
-  window.open(`https://wa.me/${telefono}?text=${mensaje}`, '_blank');
+// Codificar para la URL de WhatsApp
+let urlWhatsApp = `https://api.whatsapp.com/send?phone=528117616817&text=${encodeURIComponent(mensajeWhatsApp)}`;
+window.open(urlWhatsApp, '_blank');
 }
 
 /**
